@@ -50,8 +50,9 @@ O CI (`.github/workflows/ci.yml`) roda tudo isso a cada push.
 1. Crie um projeto Supabase de **produção** separado do de desenvolvimento.
 2. `npx supabase link --project-ref <ref>` e `npx supabase db push` para aplicar as migrações.
 3. Siga a checklist de configuração em [docs/SECURITY.md](docs/SECURITY.md).
-4. Publique o frontend (ex.: Vercel) com `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`
-   e configure o fallback de SPA (todas as rotas → `index.html`).
+4. Produção (Vercel): https://phael-tech-os.vercel.app — publica sozinho a cada push em `main`.
+   A URL e a chave **publishable** do Supabase de produção ficam em `.env.production`
+   (são públicas por natureza). Chaves secretas nunca entram no repositório.
 
 ## Tipos do banco
 `src/lib/database.types.ts` foi escrito à mão na Fase 1. Depois do `supabase start`,
