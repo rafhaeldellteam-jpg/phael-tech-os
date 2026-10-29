@@ -19,6 +19,8 @@ import { equipmentTitle, useEquipmentTypes } from '../equipment/queries'
 import { useCompanyDetails } from '../settings/queries'
 import { isOverdue, modeLabels, nextStatuses, priorityLabels, stageTone, type NextStatus } from './meta'
 import { OrderBilling } from '../finance/OrderBilling'
+import { OrderWarranty } from '../warranties/OrderWarranty'
+import { useOrderWarranties } from '../warranties/queries'
 import { OrderItems } from './OrderItems'
 import { OrderReceipt } from './OrderReceipt'
 import { orderKeys, useAssignable, useOrder, useOrderEvents, useWorkflow } from './queries'
@@ -45,6 +47,8 @@ export function OrderDetailPage() {
   const assignable = useAssignable(company.id)
   const types = useEquipmentTypes()
   const companyDetails = useCompanyDetails(company.id)
+  const delivered = Boolean(order.data?.delivered_at) && !order.data?.warranty_of
+  const warranties = useOrderWarranties(company.id, id, delivered)
   const [statusOpen, setStatusOpen] = useState(false)
   const [printKind, setPrintKind] = useState<'intake' | 'delivery' | null>(null)
   const [note, setNote] = useState('')
@@ -114,7 +118,7 @@ export function OrderDetailPage() {
   }
   const canReassign = can(['orders.update']) && can(['orders.read_all'])
   const canTakeOver = can(['orders.update']) && !o.assigned_to
-  const saved = (location.state as { saved?: 'created' | 'updated' } | null)?.saved
+  const saved = (location.state as { saved?: 'created' | 'updated' | 'warranty' } | null)?.saved
 
   return (
     <div className="grid gap-5">
@@ -133,6 +137,7 @@ export function OrderDetailPage() {
             <span>{modeLabels[o.mode]}</span>
             {o.priority !== 'normal' && <Badge tone={o.priority === 'low' ? 'neutral' : 'attn'}>Prioridade {priorityLabels[o.priority].toLowerCase()}</Badge>}
             {late && <Badge tone="danger">Atrasada</Badge>}
+            {o.warranty_of && <Badge tone="attn">Retorno em garantia</Badge>}
           </span>
         }
         actions={
@@ -161,6 +166,7 @@ export function OrderDetailPage() {
 
       {saved === 'created' && <Alert tone="success">OS aberta. Imprima o comprovante de entrada para o cliente assinar.</Alert>}
       {saved === 'updated' && <Alert tone="success">OS atualizada.</Alert>}
+      {saved === 'warranty' && <Alert tone="success">OS de retorno em garantia aberta. Aceite ou negue a garantia depois de avaliar o equipamento.</Alert>}
       {assign.isError && <Alert tone="error">{toUserMessage(assign.error)}</Alert>}
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
@@ -214,6 +220,7 @@ export function OrderDetailPage() {
 
           <OrderItems companyId={company.id} orderId={o.id} editable={!finished} />
           <OrderBilling companyId={company.id} orderId={o.id} orderNumber={o.number} />
+          <OrderWarranty companyId={company.id} order={o} canCreate={can(['orders.create'])} canDecide={can(['orders.update'])} />
 
           <section className="surface grid gap-2 rounded-lg p-5" aria-labelledby="diag-h">
             <h2 id="diag-h" className="font-semibold">
@@ -342,6 +349,7 @@ export function OrderDetailPage() {
             client: o.client,
             equipment: equipmentName,
             serial: o.equipment?.serial_number ?? null,
+            warranties: warranties.data,
           }}
         />
       )}

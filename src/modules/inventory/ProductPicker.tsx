@@ -11,6 +11,7 @@ export interface PickedProduct {
   cost_cents: number
   qty_on_hand: number
   tracks_serial: boolean
+  warranty_days: number | null
 }
 
 /** Busca de produto ativo (combobox acessível). Mostra saldo para ajudar a escolher. */

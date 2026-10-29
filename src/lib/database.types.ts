@@ -26,6 +26,7 @@ export type FinanceDirection = 'in' | 'out'
 export type PaymentMethod = 'pix' | 'cash' | 'debit' | 'credit' | 'transfer' | 'boleto' | 'other'
 export type FinanceAccountKind = 'cash' | 'bank' | 'digital'
 export type FinanceStatus = 'open' | 'partial' | 'paid' | 'canceled'
+export type WarrantyClaimStatus = 'open' | 'accepted' | 'denied' | 'resolved'
 
 type Timestamp = string
 
@@ -272,6 +273,7 @@ export interface Database {
           ready_at: Timestamp | null
           delivered_at: Timestamp | null
           closed_at: Timestamp | null
+          warranty_of: string | null
           created_by: string | null
           created_at: Timestamp
           updated_at: Timestamp
@@ -420,6 +422,7 @@ export interface Database {
           min_qty: number
           qty_on_hand: number
           tracks_serial: boolean
+          warranty_days: number | null
           active: boolean
           search_text: string
           created_at: Timestamp
@@ -437,6 +440,7 @@ export interface Database {
           price_cents?: number
           min_qty?: number
           tracks_serial?: boolean
+          warranty_days?: number | null
           active?: boolean
         }
         Update: {
@@ -449,6 +453,7 @@ export interface Database {
           price_cents?: number
           min_qty?: number
           tracks_serial?: boolean
+          warranty_days?: number | null
           active?: boolean
         }
         Relationships: [
@@ -708,6 +713,45 @@ export interface Database {
         Update: never
         Relationships: []
       }
+      warranty_claims: {
+        Row: {
+          id: string
+          company_id: string
+          number: number
+          original_order_id: string
+          item_id: string | null
+          return_order_id: string
+          reason: string
+          covered: boolean
+          expires_on: string | null
+          courtesy_reason: string | null
+          status: WarrantyClaimStatus
+          resolution: string | null
+          decided_by: string | null
+          decided_at: Timestamp | null
+          created_by: string | null
+          created_at: Timestamp
+          updated_at: Timestamp
+        }
+        Insert: never
+        Update: never
+        Relationships: [
+          {
+            foreignKeyName: 'warranty_claims_company_id_original_order_id_fkey'
+            columns: ['company_id', 'original_order_id']
+            isOneToOne: false
+            referencedRelation: 'service_orders'
+            referencedColumns: ['company_id', 'id']
+          },
+          {
+            foreignKeyName: 'warranty_claims_company_id_return_order_id_fkey'
+            columns: ['company_id', 'return_order_id']
+            isOneToOne: false
+            referencedRelation: 'service_orders'
+            referencedColumns: ['company_id', 'id']
+          },
+        ]
+      }
     }
     Views: { [_ in never]: never }
     Functions: {
@@ -831,6 +875,29 @@ export interface Database {
         }[]
       }
       low_stock_count: { Args: { p_company_id: string }; Returns: number }
+      list_warranties: {
+        Args: { p_company_id: string; p_status?: string; p_query?: string | null; p_order_id?: string | null; p_limit?: number; p_offset?: number }
+        Returns: {
+          item_id: string
+          order_id: string
+          order_number: number
+          client_id: string
+          client_name: string
+          equipment_label: string | null
+          kind: OrderItemKind
+          description: string
+          serial_number: string | null
+          warranty_days: number
+          delivered_at: Timestamp
+          expires_on: string
+          days_left: number
+          open_claims: number
+          total_count: number
+        }[]
+      }
+      open_warranty_claim: { Args: { p_order_id: string; p_data: Json }; Returns: { claim_id: string; return_order_id: string }[] }
+      decide_warranty_claim: { Args: { p_claim_id: string; p_status: WarrantyClaimStatus; p_note?: string | null }; Returns: undefined }
+      warranty_stats: { Args: { p_company_id: string }; Returns: { active_items: number; expiring_items: number; open_claims: number }[] }
       seed_finance_defaults: { Args: { p_company_id: string }; Returns: undefined }
       create_finance_entry: { Args: { p_company_id: string; p_data: Json }; Returns: string }
       update_finance_entry: { Args: { p_entry_id: string; p_data: Json }; Returns: undefined }
@@ -896,6 +963,7 @@ export interface Database {
       stock_movement_kind: StockMovementKind
       purchase_status: PurchaseStatus
       order_item_kind: OrderItemKind
+      warranty_claim_status: WarrantyClaimStatus
       finance_direction: FinanceDirection
       payment_method: PaymentMethod
       finance_account_kind: FinanceAccountKind

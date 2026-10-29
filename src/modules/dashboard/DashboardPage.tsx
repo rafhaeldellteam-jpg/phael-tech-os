@@ -14,6 +14,7 @@ import { actionLabels, entityLabels } from '../settings/audit-format'
 import { presetRange } from '../finance/period'
 import { useSummary } from '../finance/queries'
 import { useLowStockCount } from '../inventory/queries'
+import { useWarrantyStats } from '../warranties/queries'
 import { useOrderStats } from '../orders/queries'
 import { useCompanyDetails, useMembers } from '../settings/queries'
 
@@ -109,6 +110,7 @@ export function DashboardPage() {
   const finance = useSummary(active.company.id, month.from, month.to, canFinance)
   const canInventory = can(['inventory.read'])
   const lowStock = useLowStockCount(active.company.id, canInventory)
+  const warranty = useWarrantyStats(active.company.id, canOrders)
 
   const firstName = ((user?.user_metadata?.full_name as string | undefined) ?? '').split(' ')[0]
   const profileComplete = Boolean(details.data?.tax_id && (details.data.email || details.data.phone))
@@ -130,6 +132,18 @@ export function DashboardPage() {
             <strong className="tabular-nums">{lowStock.data}</strong> produto(s) no estoque mínimo ou abaixo.
           </span>
           <span className="font-medium underline underline-offset-4">Ver o que repor</span>
+        </Link>
+      )}
+
+      {canOrders && (warranty.data?.open_claims ?? 0) > 0 && (
+        <Link
+          to="/garantias?aba=acionamentos"
+          className="flex items-center justify-between gap-3 rounded-lg border border-attn-500/50 bg-attn-100 px-4 py-3 text-sm hover:brightness-95 dark:bg-attn-600/15"
+        >
+          <span>
+            <strong className="tabular-nums">{warranty.data?.open_claims}</strong> acionamento(s) de garantia em andamento.
+          </span>
+          <span className="font-medium underline underline-offset-4">Ver acionamentos</span>
         </Link>
       )}
 

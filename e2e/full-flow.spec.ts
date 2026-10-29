@@ -115,6 +115,7 @@ test('cadastro, criação de empresa, convite e auditoria', async ({ page }, tes
   await page.getByRole('button', { name: 'Peça' }).click()
   await page.getByLabel('Peça', { exact: true }).fill('ssd')
   await page.getByRole('option', { name: /SSD 240 GB/ }).click()
+  await page.getByLabel('Garantia (dias)').fill('90')
   await page.getByRole('button', { name: 'Lançar e baixar do estoque' }).click()
   await expect(page.getByText('R$ 220,00').first()).toBeVisible()
 
@@ -133,6 +134,27 @@ test('cadastro, criação de empresa, convite e auditoria', async ({ page }, tes
   await expect(page.getByText('Quitado', { exact: true })).toBeVisible()
   await page.goto('/financeiro')
   await expect(page.getByText('Recebimentos')).toBeVisible()
+
+  // Garantia: entrega da OS, prazo da peça, acionamento com OS de retorno e aceite.
+  await page.goto(orderUrl)
+  for (const next of ['Em reparo', 'Pronto para retirada', 'Entregue']) {
+    await page.getByRole('button', { name: 'Mudar status' }).click()
+    await page.getByRole('radio', { name: next, exact: true }).check()
+    await page.getByRole('button', { name: 'Confirmar mudança' }).click()
+    await expect(page.getByRole('dialog')).toBeHidden()
+  }
+  const garantia = page.getByRole('region', { name: 'Garantia' })
+  await expect(garantia.getByText('90 dias restantes')).toBeVisible()
+  await garantia.getByRole('button', { name: 'Acionar garantia' }).click()
+  await page.getByLabel('Defeito relatado pelo cliente').fill('SSD não é reconhecido')
+  await page.getByRole('button', { name: 'Abrir OS de retorno' }).click()
+  await expect(page.getByText('OS de retorno em garantia aberta.')).toBeVisible()
+  await expect(page.getByRole('heading', { name: /OS-0002/ })).toBeVisible()
+  await page.getByRole('region', { name: 'Garantia' }).getByRole('button', { name: 'Aceitar' }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Aceitar garantia' }).click()
+  await expect(page.getByRole('region', { name: 'Garantia' }).getByText('Aceita', { exact: true })).toBeVisible()
+  await page.goto('/garantias?aba=acionamentos')
+  await expect(page.getByRole('link', { name: 'Retorno: OS-0002' })).toBeVisible()
 
   await page.goto('/')
   await expect(page.getByRole('link', { name: /1\s*Em diagnóstico/ })).toBeVisible()

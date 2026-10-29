@@ -92,3 +92,13 @@ Estoque (`stock_items`, `stock_movements` com saldo por trigger e `SELECT … FO
 financeiro (`receivables`, `payables`, `payments`, `refunds` — estornos geram
 lançamentos inversos, nunca apagam), garantias, agenda, contratos, sites,
 automações (`automation_runs` com chave de idempotência) e planos SaaS.
+
+## Garantias (implementado)
+- `service_order_items.warranty_days` (padrão de `service_catalog.warranty_days` ou `products.warranty_days`).
+  Vencimento = data local da entrega (`service_orders.delivered_at`, America/Sao_Paulo) + dias; calculado em
+  `private.item_warranty_end`, nunca gravado.
+- `warranty_claims`: número sequencial (GA), OS original, item opcional, OS de retorno (única), motivo,
+  `covered` (dentro do prazo no momento do acionamento) ou `courtesy_reason` obrigatório. Escrita só pelas RPCs
+  `open_warranty_claim` e `decide_warranty_claim`; auditoria por trigger.
+- `service_orders.warranty_of` liga o retorno à OS original; um retorno não gera outro retorno.
+

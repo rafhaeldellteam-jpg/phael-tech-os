@@ -66,9 +66,15 @@ Ordem sugerida, cada item com migração + testes SQL + telas + testes:
 - Conciliação por importação de extrato CSV com sugestão automática e sem duplicar reimportações.
 - Fórmulas documentadas em `docs/FINANCE.md`.
 
+### Entregue: garantias
+- Prazo por item da OS (serviço herda do catálogo, peça do produto, ambos ajustáveis ao lançar), contado a partir
+  da entrega no fuso de São Paulo; lista de vigentes, a vencer em 15 dias e vencidas.
+- Acionamento abre OS de retorno vinculada (mesmo cliente, equipamento e técnico, prioridade alta) e segue
+  em análise -> aceita -> resolvida, ou negada com motivo. Fora do prazo, só como cortesia com motivo registrado.
+- Prazos impressos no comprovante de entrega; acionamentos em andamento no painel.
+
 ### Próximos incrementos
-1. Garantias (por serviço/peça, a partir da entrega) e retorno em garantia.
-2. Agenda de atendimentos com conversão em OS.
+1. Agenda de atendimentos com conversão em OS.
 
 ## Fase 4 — Expansão
 Contratos recorrentes, sites e serviços digitais, relatórios com fórmulas

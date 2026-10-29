@@ -1,6 +1,7 @@
 import { BrandLogo } from '@/components/ui/BrandLogo'
 import { formatCode, formatDateTime, formatPhone } from '@/lib/format'
 import { formatTaxId } from '@/lib/tax-id'
+import { formatIsoDate } from '../finance/period'
 
 export interface ReceiptData {
   kind: 'intake' | 'delivery'
@@ -19,6 +20,8 @@ export interface ReceiptData {
   client: { name: string; whatsapp: string | null; phone: string | null }
   equipment: string | null
   serial: string | null
+  /** Prazos de garantia (só no comprovante de entrega). */
+  warranties?: { description: string; warranty_days: number; expires_on: string }[]
 }
 
 /**
@@ -84,6 +87,19 @@ export function OrderReceipt({ data }: { data: ReceiptData }) {
           </p>
         )}
       </section>
+
+      {data.kind === 'delivery' && data.warranties && data.warranties.length > 0 && (
+        <section className="border-b border-black py-2">
+          <p className="font-bold">Garantia (contada a partir da entrega)</p>
+          <ul>
+            {data.warranties.map((w, i) => (
+              <li key={i}>
+                {w.description}: {w.warranty_days} dias, válida até {formatIsoDate(w.expires_on)}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {data.terms && <section className="border-b border-black py-2 whitespace-pre-line">{data.terms}</section>}
 

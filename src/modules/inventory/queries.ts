@@ -125,7 +125,7 @@ export function useProductSearch(companyId: string, q: string, enabled: boolean)
     queryFn: async () => {
       let query = requireSupabase()
         .from('products')
-        .select('id, sku, name, unit, price_cents, cost_cents, qty_on_hand, tracks_serial')
+        .select('id, sku, name, unit, price_cents, cost_cents, qty_on_hand, tracks_serial, warranty_days')
         .eq('company_id', companyId)
         .eq('active', true)
         .order('name')

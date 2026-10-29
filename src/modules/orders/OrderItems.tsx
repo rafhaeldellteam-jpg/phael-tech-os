@@ -177,6 +177,7 @@ function AddItemDialog({ companyId, orderId, kind, onClose }: { companyId: strin
   const [price, setPrice] = useState('')
   const [discount, setDiscount] = useState('')
   const [serial, setSerial] = useState('')
+  const [warranty, setWarranty] = useState('')
   const [touched, setTouched] = useState(false)
 
   const services = (catalog.data ?? []).filter((s) => s.active)
@@ -189,6 +190,7 @@ function AddItemDialog({ companyId, orderId, kind, onClose }: { companyId: strin
     qty: qtyNum <= 0 ? 'Quantidade inteira' : kind === 'part' && product && qtyNum > product.qty_on_hand ? `Só há ${product.qty_on_hand} em estoque` : undefined,
     price: priceCents === null || priceCents < 0 ? 'Valor inválido' : undefined,
     discount: discountCents === null || discountCents < 0 ? 'Desconto inválido' : priceCents !== null && discountCents > qtyNum * priceCents ? 'Desconto maior que o valor' : undefined,
+    warranty: warranty.trim() !== '' && !/^\d{1,4}$/.test(warranty.trim()) ? 'Dias inteiros' : Number(warranty) > 3650 ? 'Até 3650 dias' : undefined,
     serial: kind === 'part' && product?.tracks_serial && !serial.trim() ? 'Informe o número de série' : undefined,
   }
   const valid = Object.values(errors).every((e) => !e)
@@ -206,6 +208,7 @@ function AddItemDialog({ companyId, orderId, kind, onClose }: { companyId: strin
           unit_price_cents: priceCents,
           discount_cents: discountCents ?? 0,
           serial_number: serial.trim() || undefined,
+          warranty_days: warranty.trim() === '' ? null : Number(warranty.trim()),
         } as Json,
       })
       if (error) throw error
@@ -242,6 +245,7 @@ function AddItemDialog({ companyId, orderId, kind, onClose }: { companyId: strin
                 const s = services.find((x) => x.id === e.target.value)
                 if (s) {
                   setPrice(centsToInput(s.price_cents))
+                  setWarranty(s.warranty_days != null ? String(s.warranty_days) : '')
                   setDescription('')
                 }
               }}
@@ -269,7 +273,10 @@ function AddItemDialog({ companyId, orderId, kind, onClose }: { companyId: strin
               error={touched ? errors.pick : undefined}
               onChange={(p) => {
                 setProduct(p)
-                if (p) setPrice(centsToInput(p.price_cents))
+                if (p) {
+                  setPrice(centsToInput(p.price_cents))
+                  setWarranty(p.warranty_days != null ? String(p.warranty_days) : '')
+                }
               }}
             />
             {product?.tracks_serial && (
@@ -277,10 +284,11 @@ function AddItemDialog({ companyId, orderId, kind, onClose }: { companyId: strin
             )}
           </>
         )}
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-4">
           <TextField label="Quantidade" inputMode="numeric" value={qty} onChange={(e) => setQty(e.target.value)} error={touched || errors.qty?.startsWith('Só') ? errors.qty : undefined} />
           <TextField label="Valor unitário (R$)" inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} error={touched ? errors.price : undefined} />
           <TextField label="Desconto (R$)" inputMode="decimal" value={discount} onChange={(e) => setDiscount(e.target.value)} error={touched ? errors.discount : undefined} />
+          <TextField label="Garantia (dias)" inputMode="numeric" placeholder="Sem garantia" value={warranty} onChange={(e) => setWarranty(e.target.value)} error={touched ? errors.warranty : undefined} />
         </div>
         {priceCents !== null && priceCents >= 0 && qtyNum > 0 && (
           <p className="text-sm">

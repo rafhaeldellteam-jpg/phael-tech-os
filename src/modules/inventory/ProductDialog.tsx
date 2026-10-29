@@ -38,6 +38,11 @@ const schema = z.object({
   price: moneyField('Preço'),
   initialCost: moneyField('Custo'),
   minQty: z.string().trim().regex(/^\d{0,6}$/, 'Quantidade inteira'),
+  warrantyDays: z
+    .string()
+    .trim()
+    .regex(/^\d{0,4}$/, 'Dias inteiros')
+    .refine((v) => v === '' || Number(v) <= 3650, 'Até 3650 dias'),
   tracksSerial: z.boolean(),
   active: z.boolean(),
 })
@@ -80,6 +85,7 @@ export function ProductDialog({
       price: product ? centsToInput(product.price_cents) : '',
       initialCost: '',
       minQty: product ? String(product.min_qty) : '0',
+      warrantyDays: product?.warranty_days != null ? String(product.warranty_days) : '',
       tracksSerial: product?.tracks_serial ?? false,
       active: product?.active ?? true,
     },
@@ -97,6 +103,7 @@ export function ProductDialog({
         unit: v.unit,
         price_cents: moneyToCents(v.price),
         min_qty: Number(v.minQty || '0'),
+        warranty_days: v.warrantyDays === '' ? null : Number(v.warrantyDays),
         tracks_serial: v.tracksSerial,
         active: v.active,
       }
@@ -164,6 +171,14 @@ export function ProductDialog({
           />
         )}
         <TextField label="Estoque mínimo" inputMode="numeric" hint="Abaixo disso, entra no alerta de reposição." error={e.minQty?.message} {...register('minQty')} />
+        <TextField
+          label="Garantia padrão (dias)"
+          inputMode="numeric"
+          placeholder="Sem garantia"
+          hint="Sugerida ao lançar a peça na OS; conta a partir da entrega."
+          error={e.warrantyDays?.message}
+          {...register('warrantyDays')}
+        />
         <label className="flex items-start gap-2 text-sm sm:col-span-2">
           <input type="checkbox" {...register('tracksSerial')} className="mt-0.5 size-4" />
           <span>
