@@ -21,6 +21,11 @@ describe('clientSchema', () => {
     expect(clientSchema.safeParse({ ...valid, phone: '98765-4321' }).success).toBe(false)
     expect(clientSchema.safeParse({ ...valid, phone: '(11) 98765-4321' }).success).toBe(true)
   })
+  it('canal preferido é verificado mesmo com CPF preenchido', () => {
+    const r = clientSchema.safeParse({ ...valid, taxId: '529.982.247-25', preferredChannel: 'email' })
+    expect(r.success).toBe(false)
+    if (!r.success) expect(r.error.issues[0]?.path).toEqual(['email'])
+  })
   it('canal preferido exige o contato correspondente', () => {
     const r = clientSchema.safeParse({ ...valid, preferredChannel: 'whatsapp' })
     expect(r.success).toBe(false)

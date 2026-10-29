@@ -37,14 +37,15 @@ export const clientSchema = z
     internalNotes: optionalText(4000),
   })
   .superRefine((v, ctx) => {
-    if (v.taxId === '') return
-    const digits = onlyDigits(v.taxId)
-    if (!isValidTaxId(digits)) {
-      ctx.addIssue({ code: 'custom', path: ['taxId'], message: v.kind === 'person' ? 'CPF inválido' : 'CNPJ inválido' })
-    } else if (v.kind === 'person' && digits.length !== 11) {
-      ctx.addIssue({ code: 'custom', path: ['taxId'], message: 'Pessoa física usa CPF (11 dígitos)' })
-    } else if (v.kind === 'company' && digits.length !== 14) {
-      ctx.addIssue({ code: 'custom', path: ['taxId'], message: 'Pessoa jurídica usa CNPJ (14 dígitos)' })
+    if (v.taxId !== '') {
+      const digits = onlyDigits(v.taxId)
+      if (!isValidTaxId(digits)) {
+        ctx.addIssue({ code: 'custom', path: ['taxId'], message: v.kind === 'person' ? 'CPF inválido' : 'CNPJ inválido' })
+      } else if (v.kind === 'person' && digits.length !== 11) {
+        ctx.addIssue({ code: 'custom', path: ['taxId'], message: 'Pessoa física usa CPF (11 dígitos)' })
+      } else if (v.kind === 'company' && digits.length !== 14) {
+        ctx.addIssue({ code: 'custom', path: ['taxId'], message: 'Pessoa jurídica usa CNPJ (14 dígitos)' })
+      }
     }
     if (v.preferredChannel === 'whatsapp' && !v.whatsapp)
       ctx.addIssue({ code: 'custom', path: ['whatsapp'], message: 'Informe o WhatsApp, que é o canal preferido' })
