@@ -3,27 +3,32 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
-  Tokens Phael Tech OS
-  - navy: identidade (menu lateral nos dois temas)
-  - ok (verde): pronto, concluído, sucesso
+  Tokens Phael Tech OS — derivados da logo Phael Tech Support
+  - navy: azul profundo da marca (menu lateral nos dois temas)
+  - brand: azul royal do escudo (#0040A0) — ações principais
+  - ok (verde-limão do escudo): pronto, concluído, sucesso, foco
   - attn (laranja): requer atenção, pendente
   - danger: erro, ação destrutiva
 */
 @theme {
   --font-sans: 'Archivo', ui-sans-serif, system-ui, sans-serif;
 
-  --color-navy-950: #0a1525;
-  --color-navy-900: #0f1e33;
-  --color-navy-800: #16253b;
-  --color-navy-700: #22344f;
-  --color-navy-600: #34496a;
-  --color-navy-300: #9fb0c8;
-  --color-navy-100: #dfe6f0;
+  --color-navy-950: #050f26;
+  --color-navy-900: #08183a;
+  --color-navy-800: #0e2350;
+  --color-navy-700: #173269;
+  --color-navy-600: #284a8c;
+  --color-navy-300: #9fb2d8;
+  --color-navy-100: #dfe7f6;
 
-  --color-paper: #f4f6f9;
-  --color-ok-600: #12875a;
-  --color-ok-500: #1fa971;
-  --color-ok-100: #dcf3e8;
+  --color-brand-700: #00347f;
+  --color-brand-600: #0040a0;
+  --color-brand-500: #1a5fc4;
+
+  --color-paper: #f3f6fb;
+  --color-ok-600: #4f7a0c;
+  --color-ok-500: #8cc21f;
+  --color-ok-100: #edf6d8;
   --color-attn-600: #b85f0c;
   --color-attn-500: #e8831f;
   --color-attn-100: #fcebd8;
@@ -35,9 +40,9 @@
   :root {
     --surface: #ffffff;
     --surface-muted: var(--color-paper);
-    --border: #d9e0ea;
-    --text: #13213a;
-    --text-muted: #5a6b84;
+    --border: #d6deeb;
+    --text: #0b1a38;
+    --text-muted: #546683;
     color-scheme: light;
   }
   .dark {
@@ -59,8 +64,11 @@
     color: var(--text);
   }
   :focus-visible {
-    outline: 2px solid var(--color-ok-500);
+    outline: 2px solid var(--color-brand-600);
     outline-offset: 2px;
+  }
+  .dark :focus-visible {
+    outline-color: var(--color-ok-500);
   }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {

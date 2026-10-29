@@ -30,7 +30,7 @@ export function Header({ onOpenMenu }: { onOpenMenu: () => void }) {
     .join('')
 
   return (
-    <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-line bg-[var(--surface)] px-4">
+    <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-line bg-[var(--surface)] px-4">
       <button
         type="button"
         onClick={onOpenMenu}
@@ -85,7 +85,7 @@ export function Header({ onOpenMenu }: { onOpenMenu: () => void }) {
       <Menu.Root>
         <Menu.Trigger
           aria-label="Menu do usuário"
-          className="grid size-9 place-items-center rounded-full bg-navy-900 text-sm font-semibold text-white dark:bg-navy-600"
+          className="grid size-9 place-items-center rounded-full bg-brand-600 text-sm font-semibold text-white dark:bg-navy-600"
         >
           {initials || '?'}
         </Menu.Trigger>

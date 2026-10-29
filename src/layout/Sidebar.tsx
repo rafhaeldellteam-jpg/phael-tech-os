@@ -1,5 +1,6 @@
 import { ChevronsLeft, ChevronsRight, X } from 'lucide-react'
 import { NavLink } from 'react-router'
+import { BrandLogo } from '@/components/ui/BrandLogo'
 import { cn } from '@/components/ui/cn'
 import { useCompany } from '@/core/company/useCompany'
 import { isAvailable, visibleNavigation } from '@/core/permissions/navigation'
@@ -31,11 +32,10 @@ export function Sidebar({
           mobileOpen ? 'w-72 translate-x-0' : 'w-72 -translate-x-full',
         )}
       >
-        <div className="flex h-14 shrink-0 items-center gap-2.5 border-b border-navy-700 px-4">
-          <img src="/favicon.svg" alt="" className="size-7" />
-          <span className={cn('font-semibold tracking-tight text-white [font-stretch:85%]', collapsed && 'lg:sr-only')}>
-            Phael Tech OS
-          </span>
+        <div className="flex h-16 shrink-0 items-center gap-2.5 border-b border-navy-700 px-4">
+          <BrandLogo variant="full" className={cn('w-36', collapsed && 'lg:hidden')} />
+          <BrandLogo variant="shield" className={cn('hidden size-9', collapsed && 'lg:block')} />
+          <span className="sr-only">Phael Tech OS</span>
           <button
             type="button"
             onClick={onCloseMobile}
