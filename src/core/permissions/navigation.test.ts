@@ -29,9 +29,9 @@ describe('visibleNavigation', () => {
 })
 
 describe('fases', () => {
-  it('na Fase 1, apenas painel e área da empresa estão disponíveis', () => {
+  it('módulos prontos: painel, clientes, equipamentos e área da empresa', () => {
     const available = navigation.flatMap((s) => s.items).filter(isAvailable).map((i) => i.path)
-    expect(available.sort()).toEqual(['/', '/auditoria', '/empresa', '/equipe'])
+    expect(available.sort()).toEqual(['/', '/auditoria', '/clientes', '/empresa', '/equipamentos', '/equipe'])
   })
   it('caminhos são únicos', () => {
     const all = navigation.flatMap((s) => s.items.map((i) => i.path))

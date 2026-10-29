@@ -88,3 +88,23 @@
 @utility border-line {
   border-color: var(--border);
 }
+
+/* Impressão de etiquetas: só o elemento .print-area aparece no papel. */
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+  .print-area,
+  .print-area * {
+    visibility: visible !important;
+  }
+  .print-area {
+    position: fixed;
+    inset: 0 auto auto 0;
+    background: #fff;
+    color: #000;
+  }
+  @page {
+    margin: 6mm;
+  }
+}

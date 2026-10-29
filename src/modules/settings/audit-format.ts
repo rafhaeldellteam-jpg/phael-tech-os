@@ -5,12 +5,16 @@ export const entityLabels: Record<string, string> = {
   company_members: 'Membro',
   member_permission_overrides: 'Permissão individual',
   company_invitations: 'Convite',
+  clients: 'Cliente',
+  client_sensitive: 'Dados restritos de cliente',
+  equipment: 'Equipamento',
 }
 
 export const actionLabels: Record<string, string> = {
   insert: 'Criou',
   update: 'Alterou',
   delete: 'Removeu',
+  export: 'Exportou',
 }
 
 const fieldLabels: Record<string, string> = {
@@ -26,6 +30,35 @@ const fieldLabels: Record<string, string> = {
   revoked_at: 'cancelado em',
   accepted_at: 'aceito em',
   timezone: 'fuso horário',
+  kind: 'tipo',
+  trade_name: 'nome fantasia',
+  whatsapp: 'WhatsApp',
+  preferred_channel: 'canal preferido',
+  zip_code: 'CEP',
+  street: 'rua',
+  street_number: 'número',
+  complement: 'complemento',
+  district: 'bairro',
+  city: 'cidade',
+  state: 'UF',
+  marketing_consent: 'aceita avisos',
+  consent_updated_at: 'consentimento em',
+  has_tax_id: 'tem CPF/CNPJ',
+  archived_at: 'arquivado em',
+  internal_notes: 'observações internas',
+  client_id: 'cliente',
+  type: 'tipo',
+  manufacturer: 'fabricante',
+  model: 'modelo',
+  serial_number: 'número de série',
+  asset_tag: 'patrimônio',
+  processor: 'processador',
+  memory: 'memória',
+  storage: 'armazenamento',
+  graphics: 'placa de vídeo',
+  operating_system: 'sistema operacional',
+  condition_notes: 'condições físicas',
+  accessories: 'acessórios',
 }
 
 function show(value: Json | undefined): string {

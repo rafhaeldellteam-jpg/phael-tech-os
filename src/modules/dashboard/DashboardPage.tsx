@@ -60,6 +60,27 @@ export function DashboardPage() {
     },
   })
 
+  const canClients = can(['clients.read'])
+  const canEquipment = can(['equipment.read'])
+  const counts = useQuery({
+    queryKey: ['dashboard-counts', active.company.id, canClients, canEquipment],
+    queryFn: async () => {
+      const sb = requireSupabase()
+      const count = async (table: 'clients' | 'equipment', allowed: boolean) => {
+        if (!allowed) return null
+        const { count: n, error } = await sb
+          .from(table)
+          .select('id', { count: 'exact', head: true })
+          .eq('company_id', active.company.id)
+          .is('archived_at', null)
+        if (error) throw error
+        return n ?? 0
+      }
+      const [clients, equipment] = await Promise.all([count('clients', canClients), count('equipment', canEquipment)])
+      return { clients, equipment }
+    },
+  })
+
   const firstName = ((user?.user_metadata?.full_name as string | undefined) ?? '').split(' ')[0]
   const profileComplete = Boolean(details.data?.tax_id && (details.data.email || details.data.phone))
   const teamInvited = (members.data?.length ?? 0) > 1
@@ -77,7 +98,7 @@ export function DashboardPage() {
             Primeiros passos
           </h2>
           <p className="text-sm text-muted">
-            Os indicadores de OS, financeiro e estoque aparecem aqui quando esses módulos entrarem em operação — sempre
+            Os indicadores de OS, financeiro e estoque aparecem aqui quando esses módulos entrarem em operação, sempre
             calculados a partir dos dados reais da empresa.
           </p>
           {details.isPending ? (
@@ -115,6 +136,43 @@ export function DashboardPage() {
                   <p className="font-medium">Equipe convidada</p>
                   <p className="text-sm text-muted">
                     {members.data ? `${members.data.length} pessoa(s) na empresa.` : 'Técnicos, financeiro e atendimento.'}
+                  </p>
+                </Step>
+              )}
+              {canClients && (
+                <Step
+                  done={(counts.data?.clients ?? 0) > 0}
+                  action={
+                    can(['clients.write']) && (
+                      <Link to="/clientes/novo" className="text-sm font-medium underline underline-offset-4">
+                        Cadastrar
+                      </Link>
+                    )
+                  }
+                >
+                  <p className="font-medium">Clientes cadastrados</p>
+                  <p className="text-sm text-muted">
+                    {counts.data?.clients != null ? (
+                      <Link to="/clientes" className="hover:underline">
+                        {counts.data.clients} cliente(s) ativo(s)
+                      </Link>
+                    ) : (
+                      'Base de clientes da assistência.'
+                    )}
+                  </p>
+                </Step>
+              )}
+              {canEquipment && (
+                <Step done={(counts.data?.equipment ?? 0) > 0}>
+                  <p className="font-medium">Equipamentos registrados</p>
+                  <p className="text-sm text-muted">
+                    {counts.data?.equipment != null ? (
+                      <Link to="/equipamentos" className="hover:underline">
+                        {counts.data.equipment} equipamento(s) ativo(s)
+                      </Link>
+                    ) : (
+                      'Fichas com etiqueta QR para cada aparelho.'
+                    )}
                   </p>
                 </Step>
               )}

@@ -16,15 +16,23 @@
 - Envio automático de convites por e-mail (hoje: link copiado pelo admin).
 - Hospedagem do frontend (ex.: Vercel) com as Redirect URLs cadastradas.
 
-## Fase 2 — Operação principal (próxima)
+## Fase 2 — Operação principal (em andamento)
+
+### Entregue: clientes e equipamentos
+- Clientes PF/PJ com código sequencial, CPF/CNPJ validado e restrito (tabela separada, só com `clients.read_sensitive`),
+  observações internas, consentimento de comunicações com data, endereço com preenchimento por CEP (ViaCEP),
+  aviso de duplicidade (nome, e-mail, telefone, CPF/CNPJ), busca sem acento, filtros, paginação, arquivamento
+  e exportação CSV controlada e auditada.
+- Equipamentos vinculados a cliente da mesma empresa (FK composta), número de série único entre ativos,
+  configuração para computadores, condições físicas, acessórios e etiqueta com QR Code (só leva à ficha; exige login).
+- Pesquisa global no cabeçalho (Ctrl+K) respeitando permissões.
+
+### Próximos incrementos
 Ordem sugerida, cada item com migração + testes SQL + telas + testes:
-1. Clientes (PF/PJ, CPF/CNPJ restrito, duplicidade, busca, paginação).
-2. Equipamentos (vínculo com cliente, specs, fotos de entrada, QR com token opaco).
 3. Ordens de serviço (numeração, fluxo de status configurável, histórico, termos).
 4. Diagnósticos e checklists (inicial/final, evidências, comparação).
 5. Orçamentos (itens, versões, aprovação/recusa registrada, imutabilidade após aprovação).
 6. PDFs (orçamento, relatório técnico, termos) e anexos em Storage privado.
-7. Pesquisa global no cabeçalho.
 
 ## Fase 3 — Gestão
 Catálogo de serviços, estoque transacional, fornecedores e compras, financeiro

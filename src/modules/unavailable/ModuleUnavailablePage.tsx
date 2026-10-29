@@ -3,7 +3,7 @@ import { Navigate, useLocation } from 'react-router'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { useCompany } from '@/core/company/useCompany'
-import { CURRENT_PHASE, findNavItem } from '@/core/permissions/navigation'
+import { findNavItem, isAvailable } from '@/core/permissions/navigation'
 
 const phaseNames: Record<number, string> = {
   2: 'Operação principal',
@@ -18,7 +18,7 @@ export function ModuleUnavailablePage() {
   const { can } = useCompany()
   const item = findNavItem(pathname)
 
-  if (!item || item.phase <= CURRENT_PHASE) return <Navigate to="/" replace />
+  if (!item || isAvailable(item)) return <Navigate to="/" replace />
   if (!can(item.requires)) return <Navigate to="/" replace />
 
   return (

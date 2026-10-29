@@ -1,21 +1,12 @@
 import { forwardRef, type ButtonHTMLAttributes } from 'react'
-import { cn } from './cn'
+import { Link, type LinkProps } from 'react-router'
+import { buttonClass, type ButtonSize, type ButtonVariant } from './button-styles'
 import { Spinner } from './Spinner'
 
-type Variant = 'primary' | 'secondary' | 'ghost' | 'danger'
-
-const variants: Record<Variant, string> = {
-  primary:
-    'bg-brand-600 text-white hover:bg-brand-700 dark:bg-ok-500 dark:text-navy-950 dark:hover:bg-[#9dd22f]',
-  secondary: 'surface hover:bg-[var(--surface-muted)]',
-  ghost: 'hover:bg-black/5 dark:hover:bg-white/10',
-  danger: 'bg-danger-600 text-white hover:brightness-110',
-}
-
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: Variant
+  variant?: ButtonVariant
   loading?: boolean
-  size?: 'sm' | 'md'
+  size?: ButtonSize
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
@@ -28,12 +19,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       type={type}
       disabled={disabled || loading}
       aria-busy={loading || undefined}
-      className={cn(
-        'inline-flex items-center justify-center gap-2 rounded-md font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-55',
-        size === 'md' ? 'h-10 px-4 text-sm' : 'h-8 px-3 text-[13px]',
-        variants[variant],
-        className,
-      )}
+      className={buttonClass(variant, size, className)}
       {...rest}
     >
       {loading && <Spinner className="size-4" />}
@@ -41,3 +27,12 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     </button>
   )
 })
+
+export function ButtonLink({
+  variant = 'primary',
+  size = 'md',
+  className,
+  ...rest
+}: LinkProps & { variant?: ButtonVariant; size?: ButtonSize }) {
+  return <Link className={buttonClass(variant, size, className)} {...rest} />
+}

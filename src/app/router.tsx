@@ -12,6 +12,12 @@ import { SignUpPage } from '@/modules/auth/SignUpPage'
 import { DashboardPage } from '@/modules/dashboard/DashboardPage'
 import { NotFoundPage } from '@/modules/NotFoundPage'
 import { CreateCompanyPage } from '@/modules/onboarding/CreateCompanyPage'
+import { ClientDetailPage } from '@/modules/clients/ClientDetailPage'
+import { ClientFormPage } from '@/modules/clients/ClientFormPage'
+import { ClientListPage } from '@/modules/clients/ClientListPage'
+import { EquipmentDetailPage } from '@/modules/equipment/EquipmentDetailPage'
+import { EquipmentFormPage } from '@/modules/equipment/EquipmentFormPage'
+import { EquipmentListPage } from '@/modules/equipment/EquipmentListPage'
 import { AuditPage } from '@/modules/settings/AuditPage'
 import { CompanySettingsPage } from '@/modules/settings/CompanySettingsPage'
 import { MembersPage } from '@/modules/settings/MembersPage'
@@ -19,7 +25,7 @@ import { ModuleUnavailablePage } from '@/modules/unavailable/ModuleUnavailablePa
 
 const futureModulePaths = navigation
   .flatMap((s) => s.items)
-  .filter((i) => i.phase > 1)
+  .filter((i) => !i.ready)
   .map((i) => i.path)
 
 export const router = createBrowserRouter([
@@ -52,6 +58,34 @@ export const router = createBrowserRouter([
               {
                 element: <RequirePermission anyOf={['members.read']} />,
                 children: [{ path: '/equipe', element: <MembersPage /> }],
+              },
+              {
+                element: <RequirePermission anyOf={['clients.read']} />,
+                children: [
+                  { path: '/clientes', element: <ClientListPage /> },
+                  { path: '/clientes/:id', element: <ClientDetailPage /> },
+                ],
+              },
+              {
+                element: <RequirePermission anyOf={['clients.write']} />,
+                children: [
+                  { path: '/clientes/novo', element: <ClientFormPage /> },
+                  { path: '/clientes/:id/editar', element: <ClientFormPage /> },
+                ],
+              },
+              {
+                element: <RequirePermission anyOf={['equipment.read']} />,
+                children: [
+                  { path: '/equipamentos', element: <EquipmentListPage /> },
+                  { path: '/equipamentos/:id', element: <EquipmentDetailPage /> },
+                ],
+              },
+              {
+                element: <RequirePermission anyOf={['equipment.write']} />,
+                children: [
+                  { path: '/equipamentos/novo', element: <EquipmentFormPage /> },
+                  { path: '/equipamentos/:id/editar', element: <EquipmentFormPage /> },
+                ],
               },
               {
                 element: <RequirePermission anyOf={['audit.read']} />,

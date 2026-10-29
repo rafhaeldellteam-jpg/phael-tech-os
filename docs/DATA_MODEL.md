@@ -36,13 +36,23 @@ auth.users ─1:1─ profiles
 | `revoke_invitation(convite)` | `members.manage` | Cancela convite pendente |
 | `accept_invitation(token)` | e-mail da conta = e-mail convidado | Entra na empresa |
 
-## Fase 2 (planejado — próximas migrações)
+## Fase 2 — clientes e equipamentos (implementado)
+
+| Tabela | Finalidade | Leitura | Escrita |
+|---|---|---|---|
+| `clients` | Cadastro PF/PJ, contatos, endereço, consentimento, `code` sequencial, `has_tax_id` | `clients.read` | RPC `save_client` (`clients.write`) |
+| `client_sensitive` | CPF/CNPJ (único por empresa) e observações internas | `clients.read_sensitive` | RPC `save_client`; quem não vê dados sensíveis só pode **informar** CPF/CNPJ novo |
+| `equipment_types` | Tipos de equipamento | todos | — |
+| `equipment` | Equipamento do cliente (FK composta `company_id, client_id`), série única entre ativos | `equipment.read` | RPC `save_equipment` (`equipment.write`) |
+
+RPCs: `find_client_duplicates`, `save_client`, `set_client_archived`, `export_clients` (audita a exportação),
+`save_equipment`, `set_equipment_archived`, `global_search`.
+Não há exclusão de clientes/equipamentos: são arquivados para preservar histórico.
+
+## Fase 2 — próximos (planejado)
 
 ```
 companies
- ├── clients (PF/PJ, documento com acesso restrito, contatos, consentimentos)
- │     └── equipment (tipo, fabricante, modelo, série, specs, condições, acessórios)
- │            └── equipment_qr_tokens (token opaco para etiquetas QR)
  ├── service_orders (number via next_number, client_id, equipment_id, status,
  │     │             priority, assigned_to, due_at, intake_terms, delivery_terms)
  │     ├── service_order_events (status anterior/novo, autor, motivo, data)

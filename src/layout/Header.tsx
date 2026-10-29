@@ -1,10 +1,11 @@
 import * as Menu from '@radix-ui/react-dropdown-menu'
-import { Bell, Building2, Check, LogOut, Menu as MenuIcon, Monitor, Moon, Search, Sun } from 'lucide-react'
+import { Bell, Building2, Check, LogOut, Menu as MenuIcon, Monitor, Moon, Sun } from 'lucide-react'
 import { useAuth } from '@/core/auth/useAuth'
 import { useCompany } from '@/core/company/useCompany'
 import { roleLabels } from '@/core/permissions/permissions'
 import { useTheme } from '@/core/theme/useTheme'
 import type { ThemePreference } from '@/core/theme/theme'
+import { GlobalSearch } from './GlobalSearch'
 
 const menuContent =
   'surface z-50 min-w-56 rounded-md p-1 text-sm shadow-lg data-[side=bottom]:mt-1'
@@ -60,16 +61,8 @@ export function Header({ onOpenMenu }: { onOpenMenu: () => void }) {
         </Menu.Portal>
       </Menu.Root>
 
-      <div className="ml-auto hidden max-w-sm flex-1 md:block">
-        <label className="relative block">
-          <span className="sr-only">Pesquisa global (disponível na Fase 2)</span>
-          <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted" />
-          <input
-            disabled
-            placeholder="Pesquisa global chega com clientes e OS (Fase 2)"
-            className="h-9 w-full cursor-not-allowed rounded-md border border-line bg-[var(--surface-muted)] pr-3 pl-9 text-sm placeholder:text-muted"
-          />
-        </label>
+      <div className="ml-auto hidden max-w-md flex-1 md:block">
+        <GlobalSearch />
       </div>
 
       <button

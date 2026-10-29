@@ -2,7 +2,7 @@ import { forwardRef, useId, type InputHTMLAttributes, type ReactNode, type Selec
 import { cn } from './cn'
 
 const control =
-  'w-full rounded-md border border-line bg-[var(--surface)] px-3 text-sm text-[var(--text)] placeholder:text-[var(--text-muted)]/70 focus-visible:border-ok-500 aria-[invalid=true]:border-danger-600'
+  'w-full rounded-md border border-line bg-[var(--surface)] px-3 text-sm text-[var(--text)] placeholder:text-[var(--text-muted)]/70 focus-visible:border-brand-600 aria-[invalid=true]:border-danger-600'
 
 interface FieldShellProps {
   id: string

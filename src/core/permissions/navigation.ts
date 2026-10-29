@@ -27,8 +27,10 @@ export interface NavItem {
   label: string
   icon: LucideIcon
   requires: AccessRequirement
-  /** Fase do roadmap em que o módulo fica disponível. Itens > fase atual aparecem como indisponíveis. */
+  /** Fase do roadmap a que o módulo pertence. */
   phase: number
+  /** true quando o módulo já está implementado; os demais aparecem como indisponíveis. */
+  ready?: boolean
 }
 
 export interface NavSection {
@@ -36,16 +38,17 @@ export interface NavSection {
   items: NavItem[]
 }
 
-export const CURRENT_PHASE = 1
+/** Fase em andamento (usada no painel). */
+export const CURRENT_PHASE = 2
 
 export const navigation: NavSection[] = [
   {
     label: 'Operação',
     items: [
-      { path: '/', label: 'Painel', icon: LayoutDashboard, requires: [], phase: 1 },
+      { path: '/', label: 'Painel', icon: LayoutDashboard, requires: [], phase: 1, ready: true },
       { path: '/ordens', label: 'Ordens de serviço', icon: ClipboardList, requires: ['orders.read_all', 'orders.read_assigned'], phase: 2 },
-      { path: '/clientes', label: 'Clientes', icon: UsersRound, requires: ['clients.read'], phase: 2 },
-      { path: '/equipamentos', label: 'Equipamentos', icon: Laptop, requires: ['equipment.read'], phase: 2 },
+      { path: '/clientes', label: 'Clientes', icon: UsersRound, requires: ['clients.read'], phase: 2, ready: true },
+      { path: '/equipamentos', label: 'Equipamentos', icon: Laptop, requires: ['equipment.read'], phase: 2, ready: true },
       { path: '/diagnosticos', label: 'Diagnósticos', icon: Stethoscope, requires: ['diagnostics.write'], phase: 2 },
       { path: '/orcamentos', label: 'Orçamentos', icon: FileSignature, requires: ['quotes.read'], phase: 2 },
       { path: '/agenda', label: 'Agenda', icon: CalendarDays, requires: ['schedule.read'], phase: 3 },
@@ -67,9 +70,9 @@ export const navigation: NavSection[] = [
   {
     label: 'Empresa',
     items: [
-      { path: '/empresa', label: 'Dados da empresa', icon: Building2, requires: ['company.read'], phase: 1 },
-      { path: '/equipe', label: 'Equipe e permissões', icon: Users, requires: ['members.read'], phase: 1 },
-      { path: '/auditoria', label: 'Auditoria', icon: ScrollText, requires: ['audit.read'], phase: 1 },
+      { path: '/empresa', label: 'Dados da empresa', icon: Building2, requires: ['company.read'], phase: 1, ready: true },
+      { path: '/equipe', label: 'Equipe e permissões', icon: Users, requires: ['members.read'], phase: 1, ready: true },
+      { path: '/auditoria', label: 'Auditoria', icon: ScrollText, requires: ['audit.read'], phase: 1, ready: true },
       { path: '/atividade', label: 'Automações', icon: Activity, requires: ['company.update'], phase: 4 },
     ],
   },
@@ -83,7 +86,7 @@ export function visibleNavigation(granted: ReadonlySet<string>): NavSection[] {
 }
 
 export function isAvailable(item: NavItem): boolean {
-  return item.phase <= CURRENT_PHASE
+  return item.ready === true
 }
 
 export function findNavItem(path: string): NavItem | undefined {
