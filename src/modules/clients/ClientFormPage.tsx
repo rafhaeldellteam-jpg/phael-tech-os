@@ -26,6 +26,8 @@ interface Duplicate {
   reason: string
 }
 
+type SaveResult = { kind: 'duplicates'; duplicates: Duplicate[] } | { kind: 'saved'; id: string }
+
 export function ClientFormPage() {
   const { id } = useParams()
   const isEdit = Boolean(id)
@@ -108,7 +110,7 @@ function ClientForm({
   useEffect(() => setDuplicates(null), [kind])
 
   const save = useMutation({
-    mutationFn: async ({ values, force }: { values: ClientFormValues; force: boolean }) => {
+    mutationFn: async ({ values, force }: { values: ClientFormValues; force: boolean }): Promise<SaveResult> => {
       const sb = requireSupabase()
       if (!force) {
         const { data: dups, error: dupError } = await sb.rpc('find_client_duplicates', {
@@ -120,7 +122,7 @@ function ClientForm({
           p_exclude_id: clientId,
         })
         if (dupError) throw dupError
-        if (dups && dups.length > 0) return { duplicates: dups as Duplicate[] }
+        if (dups && dups.length > 0) return { kind: 'duplicates', duplicates: dups }
       }
       const { data, sensitive } = toSavePayload(values, {
         canSensitive,
@@ -133,15 +135,15 @@ function ClientForm({
         p_sensitive: sensitive as Json,
       })
       if (error) throw error
-      return { savedId }
+      return { kind: 'saved', id: savedId }
     },
     onSuccess: async (result) => {
-      if ('duplicates' in result) {
+      if (result.kind === 'duplicates') {
         setDuplicates(result.duplicates)
         return
       }
       await queryClient.invalidateQueries({ queryKey: clientKeys.all(companyId) })
-      navigate(`/clientes/${result.savedId}`, { replace: true, state: { saved: true } })
+      navigate(`/clientes/${result.id}`, { replace: true, state: { saved: true } })
     },
   })
 
