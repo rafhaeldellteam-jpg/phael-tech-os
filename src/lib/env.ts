@@ -1,8 +1,10 @@
 import { z } from 'zod'
 
 const envSchema = z.object({
-  VITE_SUPABASE_URL: z.url({ message: 'VITE_SUPABASE_URL deve ser uma URL válida' }),
-  VITE_SUPABASE_ANON_KEY: z.string().min(20, 'VITE_SUPABASE_ANON_KEY ausente ou inválida'),
+  VITE_SUPABASE_URL: z.url({ message: 'VITE_SUPABASE_URL ausente ou inválida' }),
+  VITE_SUPABASE_ANON_KEY: z
+    .string({ message: 'VITE_SUPABASE_ANON_KEY ausente ou inválida' })
+    .min(20, 'VITE_SUPABASE_ANON_KEY ausente ou inválida'),
 })
 
 export type AppEnv = z.infer<typeof envSchema>

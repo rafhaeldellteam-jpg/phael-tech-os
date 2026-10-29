@@ -8,7 +8,11 @@ describe('parseEnv', () => {
   it('lista os problemas quando faltam variáveis', () => {
     const r = parseEnv({})
     expect(r.ok).toBe(false)
-    if (!r.ok) expect(r.problems.length).toBe(2)
+    if (!r.ok)
+      expect(r.problems).toEqual([
+        'VITE_SUPABASE_URL ausente ou inválida',
+        'VITE_SUPABASE_ANON_KEY ausente ou inválida',
+      ])
   })
   it('rejeita URL inválida', () => {
     const r = parseEnv({ VITE_SUPABASE_URL: 'nao-e-url', VITE_SUPABASE_ANON_KEY: 'x'.repeat(40) })
