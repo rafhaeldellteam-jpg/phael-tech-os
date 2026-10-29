@@ -4,6 +4,9 @@ import { expect, test } from '@playwright/test'
 // Requer confirmação de e-mail desligada (padrão do ambiente local).
 // Rodar com: E2E_SUPABASE=1 npm run test:e2e
 test.skip(!process.env.E2E_SUPABASE, 'Defina E2E_SUPABASE=1 com o Supabase local rodando')
+// Sistema de uso exclusivo: só a primeira empresa pode ser criada, então este fluxo
+// roda uma vez por banco limpo e não pode ser repetido automaticamente.
+test.describe.configure({ retries: 0 })
 
 test('cadastro, criação de empresa, convite e auditoria', async ({ page }, testInfo) => {
   const stamp = `${Date.now()}-${testInfo.project.name}`
@@ -70,9 +73,9 @@ test('cadastro, criação de empresa, convite e auditoria', async ({ page }, tes
   await expect(page.getByText('OS aberta.')).toBeVisible()
   await expect(page.getByRole('heading', { name: /OS-0001/ })).toBeVisible()
   await page.getByRole('button', { name: 'Mudar status' }).click()
-  await page.getByLabel('Cancelado').check()
+  await page.getByRole('radio', { name: 'Cancelado' }).check()
   await expect(page.getByRole('button', { name: 'Confirmar mudança' })).toBeDisabled()
-  await page.getByLabel('Diagnóstico').check()
+  await page.getByRole('radio', { name: 'Diagnóstico', exact: true }).check()
   await page.getByRole('button', { name: 'Confirmar mudança' }).click()
   await expect(page.getByText(/mudou de Recebido para Diagnóstico/)).toBeVisible()
   await page.getByLabel('Nova observação').fill('Fonte queimada, testando outra')
