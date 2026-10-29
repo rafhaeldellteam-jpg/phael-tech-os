@@ -29,9 +29,9 @@ describe('visibleNavigation', () => {
 })
 
 describe('fases', () => {
-  it('módulos prontos: painel, clientes, equipamentos e área da empresa', () => {
+  it('módulos prontos: painel, OS, clientes, equipamentos e área da empresa', () => {
     const available = navigation.flatMap((s) => s.items).filter(isAvailable).map((i) => i.path)
-    expect(available.sort()).toEqual(['/', '/auditoria', '/clientes', '/empresa', '/equipamentos', '/equipe'])
+    expect(available.sort()).toEqual(['/', '/auditoria', '/clientes', '/empresa', '/equipamentos', '/equipe', '/ordens'])
   })
   it('caminhos são únicos', () => {
     const all = navigation.flatMap((s) => s.items.map((i) => i.path))

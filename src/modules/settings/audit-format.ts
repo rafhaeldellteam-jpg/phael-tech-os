@@ -8,6 +8,7 @@ export const entityLabels: Record<string, string> = {
   clients: 'Cliente',
   client_sensitive: 'Dados restritos de cliente',
   equipment: 'Equipamento',
+  service_orders: 'Ordem de serviço',
 }
 
 export const actionLabels: Record<string, string> = {
@@ -59,6 +60,19 @@ const fieldLabels: Record<string, string> = {
   operating_system: 'sistema operacional',
   condition_notes: 'condições físicas',
   accessories: 'acessórios',
+  priority: 'prioridade',
+  assigned_to: 'responsável',
+  reported_problem: 'problema relatado',
+  symptoms: 'sintomas',
+  intake_condition: 'condições na entrada',
+  intake_accessories: 'acessórios na entrada',
+  device_password_note: 'acesso ao sistema',
+  due_at: 'prazo',
+  ready_at: 'pronta em',
+  delivered_at: 'entregue em',
+  closed_at: 'encerrada em',
+  intake_terms: 'termo de entrada',
+  delivery_terms: 'termo de entrega',
 }
 
 function show(value: Json | undefined): string {

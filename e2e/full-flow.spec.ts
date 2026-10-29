@@ -63,6 +63,27 @@ test('cadastro, criação de empresa, convite e auditoria', async ({ page }, tes
   await expect(page.getByRole('heading', { name: 'Dell Inspiron 15' })).toBeVisible()
   await expect(page.getByRole('img', { name: /QR Code da ficha EQ-0001/ })).toBeVisible()
 
+  // OS a partir do equipamento: abertura, status com motivo obrigatório e linha do tempo.
+  await page.getByRole('link', { name: 'Abrir OS' }).click()
+  await page.getByLabel('Problema relatado pelo cliente').fill('Não liga depois de queda')
+  await page.getByRole('button', { name: 'Abrir OS' }).click()
+  await expect(page.getByText('OS aberta.')).toBeVisible()
+  await expect(page.getByRole('heading', { name: /OS-0001/ })).toBeVisible()
+  await page.getByRole('button', { name: 'Mudar status' }).click()
+  await page.getByLabel('Cancelado').check()
+  await expect(page.getByRole('button', { name: 'Confirmar mudança' })).toBeDisabled()
+  await page.getByLabel('Diagnóstico').check()
+  await page.getByRole('button', { name: 'Confirmar mudança' }).click()
+  await expect(page.getByText(/mudou de Recebido para Diagnóstico/)).toBeVisible()
+  await page.getByLabel('Nova observação').fill('Fonte queimada, testando outra')
+  await page.getByRole('button', { name: 'Registrar observação' }).click()
+  await expect(page.getByText('Fonte queimada, testando outra')).toBeVisible()
+
+  await page.goto('/')
+  await expect(page.getByRole('link', { name: /1\s*Em diagnóstico/ })).toBeVisible()
+  await page.goto('/equipamentos')
+  await page.getByRole('link', { name: 'Dell Inspiron 15' }).click()
+
   // Pesquisa global encontra o equipamento.
   await page.getByLabel('Pesquisar clientes e equipamentos').fill('inspiron')
   await expect(page.getByRole('option', { name: /Dell Inspiron 15/ })).toBeVisible()

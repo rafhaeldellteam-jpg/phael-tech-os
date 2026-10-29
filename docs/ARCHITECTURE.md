@@ -69,6 +69,15 @@ o frontend esconde o que o usuário não pode usar apenas por conveniência.
 - Itens do menu de fases futuras aparecem com "Fase N" e abrem uma página
   explicando que o módulo ainda não existe. Nenhum número é simulado.
 
+### ADR-009 — Uso exclusivo de uma empresa
+- **Contexto:** o sistema é para a gestão da própria Phael Tech Support; não haverá outras empresas.
+- **Decisão:** manter o modelo multiempresa e o RLS (isolamento e defesa em profundidade, custo zero),
+  mas só permitir criar a **primeira** empresa (`private.allow_new_companies()`). Quem cria conta depois
+  vê "Aguardando convite" e só entra por convite do administrador.
+- **Consequência:** ninguém de fora consegue montar uma empresa própria no sistema. Os testes de isolamento
+  continuam criando várias empresas direto no banco (`tests.create_company_as`). Reabrir para SaaS é trocar
+  uma função.
+
 ## Estrutura de pastas
 
 ```

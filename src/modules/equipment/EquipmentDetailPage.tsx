@@ -16,6 +16,8 @@ import { toUserMessage } from '@/lib/errors'
 import { formatCode, formatDate } from '@/lib/format'
 import { requireSupabase } from '@/lib/supabase'
 import { equipmentKeys, equipmentTitle, useEquipment, useEquipmentTypes } from './queries'
+import { stageTone } from '../orders/meta'
+import { useEquipmentOrders, useWorkflow } from '../orders/queries'
 import { COMPUTER_TYPES } from './schema'
 
 function Item({ label, children }: { label: string; children: ReactNode }) {
@@ -52,6 +54,9 @@ export function EquipmentDetailPage() {
   const equipment = useEquipment(company.id, id)
   const types = useEquipmentTypes()
   const [confirmArchive, setConfirmArchive] = useState(false)
+  const canOrders = can(['orders.read_all'])
+  const orders = useEquipmentOrders(company.id, id, canOrders)
+  const workflow = useWorkflow()
   const qr = useQrSvg(`${window.location.origin}/equipamentos/${id}`)
 
   const archive = useMutation({
@@ -196,13 +201,43 @@ export function EquipmentDetailPage() {
           </section>
 
           <section className="surface grid gap-2 rounded-lg p-5 text-sm" aria-labelledby="hist-h">
-            <h2 id="hist-h" className="font-semibold">
-              Histórico técnico
-            </h2>
-            <p className="text-muted">
-              Ordens de serviço, diagnósticos, peças trocadas e garantias deste equipamento aparecem aqui com o módulo de OS,
-              o próximo passo da Fase 2.
-            </p>
+            <div className="flex items-center justify-between gap-2">
+              <h2 id="hist-h" className="font-semibold">
+                Histórico de OS
+              </h2>
+              {can(['orders.create']) && !e.archived_at && (
+                <Link to={`/ordens/nova?cliente=${e.client.id}&equipamento=${e.id}`} className="text-[13px] font-medium underline underline-offset-4">
+                  Abrir OS
+                </Link>
+              )}
+            </div>
+            {!canOrders ? (
+              <p className="text-muted">As OS deste equipamento aparecem para quem acompanha todas as ordens.</p>
+            ) : orders.isPending ? (
+              <Spinner label="Carregando" />
+            ) : orders.isError ? (
+              <ErrorState error={orders.error} />
+            ) : orders.data.length === 0 ? (
+              <p className="text-muted">Nenhuma OS para este equipamento ainda.</p>
+            ) : (
+              <ul className="grid gap-2">
+                {orders.data.map((o) => {
+                  const st = workflow.data?.statuses.find((x) => x.key === o.status)
+                  return (
+                    <li key={o.id} className="grid gap-0.5">
+                      <span className="flex items-center gap-2">
+                        <Link to={`/ordens/${o.id}`} className="font-semibold tabular-nums hover:underline">
+                          {formatCode('OS', o.number)}
+                        </Link>
+                        <Badge tone={st ? stageTone[st.stage] : 'neutral'}>{st?.label ?? o.status}</Badge>
+                        <span className="ml-auto text-muted tabular-nums">{formatDate(o.received_at)}</span>
+                      </span>
+                      <span className="truncate text-muted">{o.reported_problem}</span>
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
           </section>
 
           {canWrite &&

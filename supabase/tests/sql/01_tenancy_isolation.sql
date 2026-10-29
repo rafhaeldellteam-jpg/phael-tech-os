@@ -9,9 +9,7 @@ select tests.login('00000000-0000-0000-0000-0000000000a1');
 select public.create_company('Empresa A') as company_a \gset
 reset role;
 
-select tests.login('00000000-0000-0000-0000-0000000000b1');
-select public.create_company('Empresa B') as company_b \gset
-reset role;
+select tests.create_company_as('00000000-0000-0000-0000-0000000000b1', 'Empresa B') as company_b \gset
 
 -- ---------------------------------------------------------------- Ana (A)
 select tests.login('00000000-0000-0000-0000-0000000000a1');

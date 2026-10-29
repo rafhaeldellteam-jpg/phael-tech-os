@@ -7,6 +7,7 @@ import { Alert } from '@/components/ui/Alert'
 import { Button } from '@/components/ui/Button'
 import { ErrorState } from '@/components/ui/ErrorState'
 import { TextField } from '@/components/ui/Field'
+import { TextAreaField } from '@/components/ui/TextArea'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Spinner } from '@/components/ui/Spinner'
 import { useActiveCompany, useCompany } from '@/core/company/useCompany'
@@ -26,6 +27,8 @@ const schema = z.object({
     .refine((v) => v === '' || isValidTaxId(v), 'CPF ou CNPJ inválido'),
   email: z.union([z.literal(''), z.email({ message: 'E-mail inválido' })]),
   phone: optional(30),
+  intakeTerms: optional(4000),
+  deliveryTerms: optional(4000),
 })
 type Values = z.infer<typeof schema>
 
@@ -48,6 +51,8 @@ export function CompanySettingsPage() {
       taxId: details.data.tax_id ? formatTaxId(details.data.tax_id) : '',
       email: details.data.email ?? '',
       phone: details.data.phone ?? '',
+      intakeTerms: details.data.intake_terms ?? '',
+      deliveryTerms: details.data.delivery_terms ?? '',
     })
   }, [details.data, reset])
 
@@ -61,6 +66,8 @@ export function CompanySettingsPage() {
           tax_id: v.taxId ? onlyDigits(v.taxId) : null,
           email: v.email || null,
           phone: v.phone || null,
+          intake_terms: v.intakeTerms || null,
+          delivery_terms: v.deliveryTerms || null,
         })
         .eq('id', company.id)
       if (error) throw error
@@ -106,6 +113,23 @@ export function CompanySettingsPage() {
             />
             <TextField label="Telefone" type="tel" autoComplete="tel" error={formState.errors.phone?.message} {...register('phone')} />
             <TextField label="E-mail" type="email" className="sm:col-span-2" error={formState.errors.email?.message} {...register('email')} />
+            <div className="sm:col-span-2">
+              <TextAreaField
+                label="Termo do comprovante de entrada"
+                rows={5}
+                hint="Sai no comprovante que o cliente assina ao deixar o equipamento. Revise com cuidado: termos não podem limitar direitos previstos no Código de Defesa do Consumidor."
+                error={formState.errors.intakeTerms?.message}
+                {...register('intakeTerms')}
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <TextAreaField
+                label="Termo do comprovante de entrega"
+                rows={4}
+                error={formState.errors.deliveryTerms?.message}
+                {...register('deliveryTerms')}
+              />
+            </div>
           </fieldset>
           {canEdit && (
             <Button type="submit" loading={save.isPending} disabled={!formState.isDirty} className="justify-self-start">

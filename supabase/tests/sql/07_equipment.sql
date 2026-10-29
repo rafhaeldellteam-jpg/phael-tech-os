@@ -10,8 +10,8 @@ select tests.login('00000000-0000-0000-0000-0000000000a1');
 select public.create_company('Empresa A') as company_a \gset
 select public.save_client(:'company_a', null, '{"kind":"person","name":"João Técnico Cliente"}') as joao \gset
 reset role;
+select tests.create_company_as('00000000-0000-0000-0000-0000000000b1', 'Empresa B') as company_b \gset
 select tests.login('00000000-0000-0000-0000-0000000000b1');
-select public.create_company('Empresa B') as company_b \gset
 select public.save_client(:'company_b', null, '{"kind":"person","name":"Cliente da B"}') as cliente_b \gset
 reset role;
 insert into public.company_members (company_id, user_id, role) values

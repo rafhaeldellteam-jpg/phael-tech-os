@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Archive, ArchiveRestore, Laptop, Lock, MessageCircle, Pencil, Plus } from 'lucide-react'
+import { Archive, ArchiveRestore, ClipboardList, Laptop, Lock, MessageCircle, Pencil, Plus } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { Link, useLocation, useParams, useSearchParams } from 'react-router'
 import { Alert } from '@/components/ui/Alert'
@@ -17,6 +17,8 @@ import { formatCode, formatDate, formatDateTime, formatPhone, formatZip, whatsap
 import { requireSupabase } from '@/lib/supabase'
 import { formatTaxId } from '@/lib/tax-id'
 import { equipmentKeys, equipmentTitle, useClientEquipment, useEquipmentTypes } from '../equipment/queries'
+import { stageTone } from '../orders/meta'
+import { useClientOrders, useWorkflow } from '../orders/queries'
 import { useMembers } from '../settings/queries'
 import { actionLabels, summarizeChanges } from '../settings/audit-format'
 import { clientKeys, useClient, useClientHistory, useClientSensitive } from './queries'
@@ -45,6 +47,7 @@ export function ClientDetailPage() {
   const canWrite = can(['clients.write'])
   const canEquipment = can(['equipment.read'])
   const canAudit = can(['audit.read'])
+  const canOrders = can(['orders.read_all'])
   const [confirmArchive, setConfirmArchive] = useState(false)
 
   const tabParam = params.get('aba') as TabKey | null
@@ -53,6 +56,8 @@ export function ClientDetailPage() {
   const sensitive = useClientSensitive(company.id, id, canSensitive)
   const equipment = useClientEquipment(company.id, id, canEquipment)
   const types = useEquipmentTypes()
+  const orders = useClientOrders(company.id, id, canOrders && tab === 'ordens')
+  const workflow = useWorkflow()
   const history = useClientHistory(company.id, id, canAudit && tab === 'historico')
   const members = useMembers(company.id, canAudit && tab === 'historico' && can(['members.read']))
 
@@ -97,7 +102,7 @@ export function ClientDetailPage() {
     ...(canEquipment
       ? [{ key: 'equipamentos' as const, label: 'Equipamentos', badge: equipment.data ? <Badge>{equipment.data.length}</Badge> : undefined }]
       : []),
-    { key: 'ordens' as const, label: 'Ordens de serviço' },
+    ...(canOrders ? [{ key: 'ordens' as const, label: 'Ordens de serviço' }] : []),
     { key: 'orcamentos' as const, label: 'Orçamentos' },
     { key: 'financeiro' as const, label: 'Financeiro' },
     ...(canAudit ? [{ key: 'historico' as const, label: 'Histórico' }] : []),
@@ -245,9 +250,44 @@ export function ClientDetailPage() {
         </section>
       )}
 
-      {(tab === 'ordens' || tab === 'orcamentos' || tab === 'financeiro') && (
+      {tab === 'ordens' && canOrders && (
+        <section className="grid gap-3">
+          {can(['orders.create']) && !c.archived_at && (
+            <ButtonLink to={`/ordens/nova?cliente=${c.id}`} className="justify-self-start">
+              <Plus className="size-4" aria-hidden /> Nova OS
+            </ButtonLink>
+          )}
+          {orders.isPending ? (
+            <Spinner label="Carregando OS" />
+          ) : orders.isError ? (
+            <ErrorState error={orders.error} onRetry={orders.refetch} />
+          ) : orders.data.length === 0 ? (
+            <EmptyState icon={ClipboardList} title="Nenhuma OS deste cliente" />
+          ) : (
+            <ul className="surface divide-y divide-[var(--border)] rounded-lg text-sm">
+              {orders.data.map((o) => {
+                const st = workflow.data?.statuses.find((x) => x.key === o.status)
+                return (
+                  <li key={o.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
+                    <Link to={`/ordens/${o.id}`} className="w-20 font-semibold tabular-nums hover:underline">
+                      {formatCode('OS', o.number)}
+                    </Link>
+                    <span className="min-w-0 flex-1 truncate">
+                      {o.equipment ? `${equipmentTitle(o.equipment, typeLabel(o.equipment.type))}: ` : ''}
+                      {o.reported_problem}
+                    </span>
+                    <Badge tone={st ? stageTone[st.stage] : 'neutral'}>{st?.label ?? o.status}</Badge>
+                    <span className="text-muted tabular-nums">{formatDate(o.received_at)}</span>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </section>
+      )}
+
+      {(tab === 'orcamentos' || tab === 'financeiro') && (
         <EmptyState icon={Lock} title="Ainda não disponível">
-          {tab === 'ordens' && 'As ordens de serviço deste cliente aparecem aqui quando o módulo de OS for entregue (próximo passo da Fase 2).'}
           {tab === 'orcamentos' && 'Os orçamentos aparecem aqui quando o módulo de orçamentos for entregue (Fase 2).'}
           {tab === 'financeiro' && 'Pagamentos e pendências aparecem aqui quando o módulo financeiro for entregue (Fase 3).'}
         </EmptyState>

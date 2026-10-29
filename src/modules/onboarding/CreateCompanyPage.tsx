@@ -1,10 +1,11 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { Navigate, useNavigate } from 'react-router'
 import { z } from 'zod'
 import { Alert } from '@/components/ui/Alert'
 import { Button } from '@/components/ui/Button'
+import { Spinner } from '@/components/ui/Spinner'
 import { TextField } from '@/components/ui/Field'
 import { useAuth } from '@/core/auth/useAuth'
 import { useCompany } from '@/core/company/useCompany'
@@ -19,7 +20,7 @@ const schema = z.object({
 type Values = z.infer<typeof schema>
 
 export function CreateCompanyPage() {
-  const { signOut } = useAuth()
+  const { signOut, user } = useAuth()
   const { active, refresh, selectCompany } = useCompany()
   const navigate = useNavigate()
   const { register, handleSubmit, formState } = useForm<Values>({ resolver: zodResolver(schema) })
@@ -40,7 +41,42 @@ export function CreateCompanyPage() {
     },
   })
 
+  const allowed = useQuery({
+    queryKey: ['can-create-company', user?.id],
+    queryFn: async () => {
+      const { data, error } = await requireSupabase().rpc('can_create_company')
+      if (error) throw error
+      return data
+    },
+  })
+
   if (active && !create.isPending && !create.isSuccess) return <Navigate to="/" replace />
+
+  if (allowed.isPending) {
+    return (
+      <AuthLayout title="Preparando seu acesso">
+        <Spinner label="Verificando" />
+      </AuthLayout>
+    )
+  }
+
+  // Sistema de uso exclusivo: depois da primeira empresa, só se entra por convite.
+  if (allowed.data === false) {
+    return (
+      <AuthLayout
+        title="Aguardando convite"
+        description={<>Sua conta <strong>{user?.email}</strong> foi criada, mas ainda não faz parte da equipe.</>}
+      >
+        <Alert tone="info">
+          O Phael Tech OS é de uso interno. Peça ao administrador para enviar um convite para este e-mail e abra o link
+          recebido; o acesso é liberado na hora.
+        </Alert>
+        <button type="button" onClick={() => void signOut()} className="justify-self-start text-sm underline underline-offset-4">
+          Sair
+        </button>
+      </AuthLayout>
+    )
+  }
 
   return (
     <AuthLayout

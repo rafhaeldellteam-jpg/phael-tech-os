@@ -9,6 +9,10 @@ export type MemberRole = 'admin' | 'technician' | 'finance' | 'attendant'
 export type MemberStatus = 'active' | 'suspended'
 export type ClientKind = 'person' | 'company'
 export type ContactChannel = 'whatsapp' | 'phone' | 'email'
+export type ServiceMode = 'bench' | 'remote' | 'onsite'
+export type OrderPriority = 'low' | 'normal' | 'high' | 'urgent'
+export type OrderEventKind = 'created' | 'status' | 'assigned' | 'note' | 'updated'
+export type OrderStage = 'open' | 'waiting' | 'working' | 'ready' | 'done' | 'stopped'
 
 type Timestamp = string
 
@@ -25,12 +29,16 @@ export interface Database {
           phone: string | null
           timezone: string
           currency: string
+          intake_terms: string | null
+          delivery_terms: string | null
           created_by: string | null
           created_at: Timestamp
           updated_at: Timestamp
         }
         Insert: never
         Update: {
+          intake_terms?: string | null
+          delivery_terms?: string | null
           name?: string
           legal_name?: string | null
           tax_id?: string | null
@@ -218,11 +226,93 @@ export interface Database {
           },
         ]
       }
+      service_order_statuses: {
+        Row: { key: string; label: string; stage: OrderStage; sort: number; is_final: boolean }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      service_order_transitions: {
+        Row: { from_status: string; to_status: string; requires_reason: boolean }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      service_orders: {
+        Row: {
+          id: string
+          company_id: string
+          number: number
+          client_id: string
+          equipment_id: string | null
+          mode: ServiceMode
+          status: string
+          priority: OrderPriority
+          assigned_to: string | null
+          reported_problem: string
+          symptoms: string | null
+          intake_condition: string | null
+          intake_accessories: string[]
+          device_password_note: string | null
+          due_at: Timestamp | null
+          received_at: Timestamp
+          ready_at: Timestamp | null
+          delivered_at: Timestamp | null
+          closed_at: Timestamp | null
+          created_by: string | null
+          created_at: Timestamp
+          updated_at: Timestamp
+        }
+        Insert: never
+        Update: never
+        Relationships: [
+          {
+            foreignKeyName: 'service_orders_company_id_client_id_fkey'
+            columns: ['company_id', 'client_id']
+            isOneToOne: false
+            referencedRelation: 'clients'
+            referencedColumns: ['company_id', 'id']
+          },
+          {
+            foreignKeyName: 'service_orders_company_id_equipment_id_fkey'
+            columns: ['company_id', 'equipment_id']
+            isOneToOne: false
+            referencedRelation: 'equipment'
+            referencedColumns: ['company_id', 'id']
+          },
+          {
+            foreignKeyName: 'service_orders_status_fkey'
+            columns: ['status']
+            isOneToOne: false
+            referencedRelation: 'service_order_statuses'
+            referencedColumns: ['key']
+          },
+        ]
+      }
+      service_order_events: {
+        Row: {
+          id: number
+          company_id: string
+          order_id: string
+          kind: OrderEventKind
+          from_status: string | null
+          to_status: string | null
+          reason: string | null
+          note: string | null
+          assigned_to: string | null
+          actor_id: string | null
+          created_at: Timestamp
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
     }
     Views: { [_ in never]: never }
     Functions: {
       my_permissions: { Args: { p_company_id: string }; Returns: string[] }
       create_company: { Args: { p_name: string; p_legal_name?: string | null }; Returns: string }
+      can_create_company: { Args: Record<string, never>; Returns: boolean }
       update_member: {
         Args: { p_member_id: string; p_role: MemberRole; p_status: MemberStatus }
         Returns: undefined
@@ -294,7 +384,23 @@ export interface Database {
       set_equipment_archived: { Args: { p_equipment_id: string; p_archived: boolean }; Returns: undefined }
       global_search: {
         Args: { p_company_id: string; p_query: string }
-        Returns: { kind: 'client' | 'equipment'; id: string; code: number; title: string; subtitle: string }[]
+        Returns: { kind: 'client' | 'equipment' | 'order'; id: string; code: number; title: string; subtitle: string }[]
+      }
+      create_service_order: { Args: { p_company_id: string; p_data: Json }; Returns: string }
+      update_service_order: { Args: { p_order_id: string; p_data: Json }; Returns: undefined }
+      change_service_order_status: {
+        Args: { p_order_id: string; p_to: string; p_reason?: string | null }
+        Returns: undefined
+      }
+      assign_service_order: { Args: { p_order_id: string; p_user_id: string | null }; Returns: undefined }
+      add_service_order_note: { Args: { p_order_id: string; p_note: string }; Returns: undefined }
+      list_assignable_members: {
+        Args: { p_company_id: string }
+        Returns: { user_id: string; full_name: string | null; email: string; role: MemberRole }[]
+      }
+      service_order_stats: {
+        Args: { p_company_id: string }
+        Returns: { status: string; total: number; overdue: number }[]
       }
     }
     Enums: {
@@ -302,6 +408,9 @@ export interface Database {
       member_status: MemberStatus
       client_kind: ClientKind
       contact_channel: ContactChannel
+      service_mode: ServiceMode
+      order_priority: OrderPriority
+      order_event_kind: OrderEventKind
     }
     CompositeTypes: { [_ in never]: never }
   }

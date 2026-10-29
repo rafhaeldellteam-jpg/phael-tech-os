@@ -49,6 +49,20 @@ RPCs: `find_client_duplicates`, `save_client`, `set_client_archived`, `export_cl
 `save_equipment`, `set_equipment_archived`, `global_search`.
 Não há exclusão de clientes/equipamentos: são arquivados para preservar histórico.
 
+## Fase 2 — ordens de serviço (implementado)
+
+| Tabela | Finalidade |
+|---|---|
+| `service_order_statuses` | 14 status com etapa (`open`, `working`, `waiting`, `ready`, `done`, `stopped`) |
+| `service_order_transitions` | De → para permitidos e se exigem motivo |
+| `service_orders` | OS: número, cliente, equipamento (FK composta), modo, status, prioridade, responsável, problema, entrada, prazos |
+| `service_order_events` | Linha do tempo imutável (criação, status, atribuição, observação, edição) |
+
+RPCs: `create_service_order`, `update_service_order`, `change_service_order_status`, `assign_service_order`,
+`add_service_order_note`, `list_assignable_members`, `service_order_stats`.
+Visibilidade: `orders.read_all` ou (`orders.read_assigned` e responsável = usuário). `orders.deliver` permite ao
+atendente registrar entrega/devolução sem acesso ao resto do andamento.
+
 ## Fase 2 — próximos (planejado)
 
 ```

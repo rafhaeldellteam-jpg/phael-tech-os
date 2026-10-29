@@ -31,7 +31,8 @@ No ambiente local a confirmação de e-mail vem desligada e os e-mails (recupera
 de senha) aparecem no Inbucket/Mailpit, cujo endereço o `supabase start` mostra.
 
 Primeiro acesso: **Criar conta → Criar empresa**. Você vira administrador e pode
-convidar a equipe em **Equipe e permissões** (o link do convite é copiado e
+convidar a equipe em **Equipe e permissões**. O sistema é de uso exclusivo: depois da primeira empresa,
+novas contas só entram por convite (o link do convite é copiado e
 enviado por você; envio automático por e-mail é uma etapa futura).
 
 ## Testes

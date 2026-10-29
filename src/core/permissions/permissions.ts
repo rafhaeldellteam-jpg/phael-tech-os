@@ -17,6 +17,7 @@ export type PermissionKey =
   | 'orders.read_assigned'
   | 'orders.create'
   | 'orders.update'
+  | 'orders.deliver'
   | 'diagnostics.write'
   | 'quotes.read'
   | 'quotes.write'

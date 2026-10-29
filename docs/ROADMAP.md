@@ -27,9 +27,18 @@
   configuração para computadores, condições físicas, acessórios e etiqueta com QR Code (só leva à ficha; exige login).
 - Pesquisa global no cabeçalho (Ctrl+K) respeitando permissões.
 
+### Entregue: ordens de serviço
+- Numeração sequencial por empresa, balcão / remoto / externo, prioridade, prazo, técnico responsável.
+- 14 status com transições válidas (sem passar por todas as etapas), motivo obrigatório para cancelar,
+  reabrir, recusa e reparo inviável; reabertura limpa datas de entrega/encerramento.
+- Linha do tempo imutável (abertura, status, atribuição, observações, edições) com autor e data.
+- Técnico vê e altera só as OS atribuídas a ele; atendente abre e registra entrega; financeiro só consulta.
+- Comprovantes de entrada e de entrega para imprimir e assinar, com termos editáveis em Dados da empresa.
+- Indicadores reais no painel (em andamento, diagnóstico, aguardando aprovação/peça, em reparo, prontas, atrasadas).
+- Sistema travado para uso exclusivo de uma empresa (novas contas só por convite).
+
 ### Próximos incrementos
 Ordem sugerida, cada item com migração + testes SQL + telas + testes:
-3. Ordens de serviço (numeração, fluxo de status configurável, histórico, termos).
 4. Diagnósticos e checklists (inicial/final, evidências, comparação).
 5. Orçamentos (itens, versões, aprovação/recusa registrada, imutabilidade após aprovação).
 6. PDFs (orçamento, relatório técnico, termos) e anexos em Storage privado.

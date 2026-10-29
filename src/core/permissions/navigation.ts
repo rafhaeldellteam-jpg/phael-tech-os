@@ -46,7 +46,7 @@ export const navigation: NavSection[] = [
     label: 'Operação',
     items: [
       { path: '/', label: 'Painel', icon: LayoutDashboard, requires: [], phase: 1, ready: true },
-      { path: '/ordens', label: 'Ordens de serviço', icon: ClipboardList, requires: ['orders.read_all', 'orders.read_assigned'], phase: 2 },
+      { path: '/ordens', label: 'Ordens de serviço', icon: ClipboardList, requires: ['orders.read_all', 'orders.read_assigned'], phase: 2, ready: true },
       { path: '/clientes', label: 'Clientes', icon: UsersRound, requires: ['clients.read'], phase: 2, ready: true },
       { path: '/equipamentos', label: 'Equipamentos', icon: Laptop, requires: ['equipment.read'], phase: 2, ready: true },
       { path: '/diagnosticos', label: 'Diagnósticos', icon: Stethoscope, requires: ['diagnostics.write'], phase: 2 },

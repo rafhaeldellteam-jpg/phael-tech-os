@@ -12,6 +12,9 @@ import { SignUpPage } from '@/modules/auth/SignUpPage'
 import { DashboardPage } from '@/modules/dashboard/DashboardPage'
 import { NotFoundPage } from '@/modules/NotFoundPage'
 import { CreateCompanyPage } from '@/modules/onboarding/CreateCompanyPage'
+import { OrderDetailPage } from '@/modules/orders/OrderDetailPage'
+import { OrderFormPage } from '@/modules/orders/OrderFormPage'
+import { OrderListPage } from '@/modules/orders/OrderListPage'
 import { ClientDetailPage } from '@/modules/clients/ClientDetailPage'
 import { ClientFormPage } from '@/modules/clients/ClientFormPage'
 import { ClientListPage } from '@/modules/clients/ClientListPage'
@@ -58,6 +61,21 @@ export const router = createBrowserRouter([
               {
                 element: <RequirePermission anyOf={['members.read']} />,
                 children: [{ path: '/equipe', element: <MembersPage /> }],
+              },
+              {
+                element: <RequirePermission anyOf={['orders.read_all', 'orders.read_assigned']} />,
+                children: [
+                  { path: '/ordens', element: <OrderListPage /> },
+                  { path: '/ordens/:id', element: <OrderDetailPage /> },
+                ],
+              },
+              {
+                element: <RequirePermission anyOf={['orders.create']} />,
+                children: [{ path: '/ordens/nova', element: <OrderFormPage /> }],
+              },
+              {
+                element: <RequirePermission anyOf={['orders.update']} />,
+                children: [{ path: '/ordens/:id/editar', element: <OrderFormPage /> }],
               },
               {
                 element: <RequirePermission anyOf={['clients.read']} />,

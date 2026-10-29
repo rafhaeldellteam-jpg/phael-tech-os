@@ -82,3 +82,18 @@ end;
 $$;
 
 grant execute on all functions in schema tests to authenticated, anon;
+
+-- Cria empresa + admin direto como superusuário. Usado para montar cenários de
+-- isolamento com várias empresas, que a regra de empresa única não permite pela RPC.
+create function tests.create_company_as(p_user uuid, p_name text)
+returns uuid
+language plpgsql
+as $$
+declare
+  v_id uuid;
+begin
+  insert into public.companies (name, created_by) values (p_name, p_user) returning id into v_id;
+  insert into public.company_members (company_id, user_id, role) values (v_id, p_user, 'admin');
+  return v_id;
+end;
+$$;

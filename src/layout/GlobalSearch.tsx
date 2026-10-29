@@ -1,12 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
-import { Laptop, Search, UserRound } from 'lucide-react'
+import { ClipboardList, Laptop, Search, UserRound } from 'lucide-react'
 import { useEffect, useId, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useActiveCompany } from '@/core/company/useCompany'
 import { formatCode } from '@/lib/format'
 import { requireSupabase } from '@/lib/supabase'
 
-/** Pesquisa global: clientes e equipamentos (OS entram quando o módulo existir). Atalho: Ctrl+K / ⌘K. */
+/** Pesquisa global: clientes, equipamentos e OS pelo número. Atalho: Ctrl+K / ⌘K. */
 export function GlobalSearch() {
   const id = useId()
   const navigate = useNavigate()
@@ -45,7 +45,7 @@ export function GlobalSearch() {
   const items = results.data ?? []
 
   const go = (item: (typeof items)[number]) => {
-    navigate(item.kind === 'client' ? `/clientes/${item.id}` : `/equipamentos/${item.id}`)
+    navigate(item.kind === 'client' ? `/clientes/${item.id}` : item.kind === 'order' ? `/ordens/${item.id}` : `/equipamentos/${item.id}`)
     setText('')
     setQ('')
     setOpen(false)
@@ -70,7 +70,7 @@ export function GlobalSearch() {
         aria-autocomplete="list"
         aria-activedescendant={showList && items[active] ? `${id}-opt-${active}` : undefined}
         value={text}
-        placeholder="Pesquisar clientes e equipamentos (Ctrl+K)"
+        placeholder="Pesquisar clientes, equipamentos ou nº da OS (Ctrl+K)"
         onChange={(e) => {
           setText(e.target.value)
           setOpen(true)
@@ -105,7 +105,7 @@ export function GlobalSearch() {
             <li className="px-3 py-2 text-muted">Nada encontrado para “{q}”.</li>
           ) : (
             items.map((item, i) => {
-              const Icon = item.kind === 'client' ? UserRound : Laptop
+              const Icon = item.kind === 'client' ? UserRound : item.kind === 'order' ? ClipboardList : Laptop
               return (
                 <li
                   key={`${item.kind}-${item.id}`}
@@ -124,7 +124,7 @@ export function GlobalSearch() {
                     <span className="block truncate text-[13px] text-muted">{item.subtitle}</span>
                   </span>
                   <span className="text-[13px] text-muted tabular-nums">
-                    {formatCode(item.kind === 'client' ? 'CL' : 'EQ', item.code)}
+                    {formatCode(item.kind === 'client' ? 'CL' : item.kind === 'order' ? 'OS' : 'EQ', item.code)}
                   </span>
                 </li>
               )

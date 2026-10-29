@@ -12,7 +12,7 @@ select tests.throws($q$select public.create_company('Sem login')$q$, '28000',
 select tests.login('00000000-0000-0000-0000-0000000000a1');
 select public.create_company('Empresa A') as company_a \gset
 
-select tests.throws($q$select public.create_company('X')$q$, '23514', 'nome muito curto é rejeitado');
+select tests.throws(format($q$update public.companies set name = 'X' where id = %L$q$, :'company_a'), '23514', 'nome muito curto é rejeitado');
 
 update public.companies set tax_id = '11222333000181', name = 'Empresa A Ltda' where id = :'company_a';
 select tests.throws(
@@ -52,12 +52,10 @@ reset role;
 -- Nem o superusuário altera a auditoria (trigger de imutabilidade)
 select tests.throws('update public.audit_log set action = $$x$$', '42501', 'auditoria é imutável até para o dono');
 
--- Limite de empresas por usuário
+-- Uso exclusivo: uma única empresa
 select tests.login('00000000-0000-0000-0000-0000000000a1');
-select public.create_company('Empresa 2');
-select public.create_company('Empresa 3');
-select tests.throws($q$select public.create_company('Empresa 4')$q$, '54000',
-  'limite de 3 empresas por usuário');
+select tests.throws($q$select public.create_company('Segunda empresa')$q$, '42501',
+  'uso exclusivo: não se cria uma segunda empresa');
 
 -- Perfil: atualiza o próprio nome, não o de outros
 select tests.ok(

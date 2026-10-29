@@ -41,25 +41,32 @@ export function Header({ onOpenMenu }: { onOpenMenu: () => void }) {
         <MenuIcon className="size-5" />
       </button>
 
-      <Menu.Root>
-        <Menu.Trigger className="flex min-w-0 items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10">
+      {memberships.length <= 1 ? (
+        <span className="flex min-w-0 items-center gap-2 px-2 text-sm font-medium">
           <Building2 className="size-4 shrink-0 text-muted" aria-hidden />
           <span className="truncate">{active?.company.name}</span>
-          <span className="sr-only">Trocar empresa</span>
-        </Menu.Trigger>
-        <Menu.Portal>
-          <Menu.Content align="start" className={menuContent}>
-            <Menu.Label className="px-2 py-1 text-xs text-muted">Suas empresas</Menu.Label>
-            {memberships.map((m) => (
-              <Menu.Item key={m.company.id} className={menuItem} onSelect={() => selectCompany(m.company.id)}>
-                <Check className={m.company.id === active?.company.id ? 'size-4' : 'invisible size-4'} />
-                <span className="flex-1 truncate">{m.company.name}</span>
-                <span className="text-xs text-muted">{roleLabels[m.role]}</span>
-              </Menu.Item>
-            ))}
-          </Menu.Content>
-        </Menu.Portal>
-      </Menu.Root>
+        </span>
+      ) : (
+        <Menu.Root>
+          <Menu.Trigger className="flex min-w-0 items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10">
+            <Building2 className="size-4 shrink-0 text-muted" aria-hidden />
+            <span className="truncate">{active?.company.name}</span>
+            <span className="sr-only">Trocar empresa</span>
+          </Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Content align="start" className={menuContent}>
+              <Menu.Label className="px-2 py-1 text-xs text-muted">Suas empresas</Menu.Label>
+              {memberships.map((m) => (
+                <Menu.Item key={m.company.id} className={menuItem} onSelect={() => selectCompany(m.company.id)}>
+                  <Check className={m.company.id === active?.company.id ? 'size-4' : 'invisible size-4'} />
+                  <span className="flex-1 truncate">{m.company.name}</span>
+                  <span className="text-xs text-muted">{roleLabels[m.role]}</span>
+                </Menu.Item>
+              ))}
+            </Menu.Content>
+          </Menu.Portal>
+        </Menu.Root>
+      )}
 
       <div className="ml-auto hidden max-w-md flex-1 md:block">
         <GlobalSearch />

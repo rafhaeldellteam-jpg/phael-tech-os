@@ -10,6 +10,7 @@ import { CURRENT_PHASE } from '@/core/permissions/navigation'
 import { roleLabels } from '@/core/permissions/permissions'
 import { requireSupabase } from '@/lib/supabase'
 import { actionLabels, entityLabels } from '../settings/audit-format'
+import { useOrderStats } from '../orders/queries'
 import { useCompanyDetails, useMembers } from '../settings/queries'
 
 const phases = [
@@ -81,6 +82,24 @@ export function DashboardPage() {
     },
   })
 
+  const canOrders = can(['orders.read_all', 'orders.read_assigned'])
+  const stats = useOrderStats(active.company.id, canOrders)
+  const sum = (keys: string[]) => (stats.data ?? []).filter((r) => keys.includes(r.status)).reduce((a, r) => a + Number(r.total), 0)
+  const indicators = [
+    { label: 'Em andamento', value: (stats.data ?? []).reduce((a, r) => a + Number(r.total), 0), to: '/ordens' },
+    { label: 'Em diagnóstico', value: sum(['diagnosis']), to: '/ordens?status=diagnosis' },
+    { label: 'Aguardando aprovação', value: sum(['awaiting_approval']), to: '/ordens?status=awaiting_approval', attention: true },
+    { label: 'Aguardando peça', value: sum(['awaiting_parts']), to: '/ordens?status=awaiting_parts', attention: true },
+    { label: 'Em reparo', value: sum(['in_repair', 'testing']), to: '/ordens?etapa=working' },
+    { label: 'Prontas para retirada', value: sum(['ready']), to: '/ordens?status=ready', ok: true },
+    {
+      label: 'Atrasadas',
+      value: (stats.data ?? []).reduce((a, r) => a + Number(r.overdue), 0),
+      to: '/ordens?atrasadas=1',
+      danger: true,
+    },
+  ]
+
   const firstName = ((user?.user_metadata?.full_name as string | undefined) ?? '').split(' ')[0]
   const profileComplete = Boolean(details.data?.tax_id && (details.data.email || details.data.phone))
   const teamInvited = (members.data?.length ?? 0) > 1
@@ -92,14 +111,50 @@ export function DashboardPage() {
         description={`${roleLabels[active.role]} em ${active.company.name}`}
       />
 
+      {canOrders && (
+        <section aria-labelledby="os-h" className="grid gap-3">
+          <div className="flex items-baseline justify-between">
+            <h2 id="os-h" className="text-lg font-semibold">
+              Ordens de serviço
+            </h2>
+            {can(['orders.create']) && (
+              <Link to="/ordens/nova" className="text-sm font-medium underline underline-offset-4">
+                Abrir OS
+              </Link>
+            )}
+          </div>
+          {stats.isPending ? (
+            <Spinner label="Calculando indicadores" />
+          ) : stats.isError ? (
+            <p className="text-sm text-muted">Não foi possível carregar os indicadores.</p>
+          ) : (
+            <ul className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-line bg-[var(--border)] sm:grid-cols-4 lg:grid-cols-7">
+              {indicators.map((i) => (
+                <li key={i.label} className="bg-[var(--surface)]">
+                  <Link to={i.to} className="grid h-full gap-1 p-4 hover:bg-[var(--surface-muted)]">
+                    <span
+                      className={`text-3xl font-semibold tabular-nums [font-stretch:85%] ${
+                        i.value > 0 && i.danger ? 'text-danger-600' : i.value > 0 && i.attention ? 'text-attn-600' : i.value > 0 && i.ok ? 'text-ok-600 dark:text-ok-500' : ''
+                      }`}
+                    >
+                      {i.value}
+                    </span>
+                    <span className="text-[13px] text-muted">{i.label}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
+
       <div className="grid gap-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <section aria-labelledby="primeiros-passos" className="grid content-start gap-2">
           <h2 id="primeiros-passos" className="text-lg font-semibold">
             Primeiros passos
           </h2>
           <p className="text-sm text-muted">
-            Os indicadores de OS, financeiro e estoque aparecem aqui quando esses módulos entrarem em operação, sempre
-            calculados a partir dos dados reais da empresa.
+            Financeiro, estoque e garantias entram no painel com a Fase 3, sempre calculados a partir dos dados reais.
           </p>
           {details.isPending ? (
             <Spinner label="Verificando configuração" />
