@@ -143,7 +143,7 @@ test('cadastro, criação de empresa, convite e auditoria', async ({ page }, tes
   await page.getByLabel('Pesquisar clientes e equipamentos').fill('inspiron')
   await expect(page.getByRole('option', { name: /Dell Inspiron 15/ })).toBeVisible()
 
-  // Módulo futuro aparece como indisponível, sem dados simulados.
-  await page.goto('/financeiro')
+  // Financeiro abre com dados reais; módulo futuro aparece como indisponível.
+  await page.goto('/relatorios')
   await expect(page.getByText('Módulo ainda não disponível')).toBeVisible()
 })
