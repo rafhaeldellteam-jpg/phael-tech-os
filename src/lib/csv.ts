@@ -10,7 +10,7 @@ export function toCsv(headers: string[], rows: Array<Array<string | number | boo
     return /[";\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
   }
   const lines = [headers, ...rows].map((r) => r.map(cell).join(';'))
-  return '﻿' + lines.join('\r\n')
+  return '\uFEFF' + lines.join('\r\n')
 }
 
 export function downloadText(filename: string, content: string, type = 'text/csv;charset=utf-8'): void {

@@ -45,7 +45,7 @@ function toIso(raw: string): string | null {
  * colunas de data, descrição e valor pelo cabeçalho. Valores negativos = saídas.
  */
 export function parseStatementCsv(text: string): ParseResult {
-  const rows = text.replace(/^﻿/, '').split(/\r?\n/).filter((l) => l.trim() !== '')
+  const rows = text.replace(/^\uFEFF/, '').split(/\r?\n/).filter((l) => l.trim() !== '')
   if (rows.length < 2) return { lines: [], errors: ['O arquivo precisa de cabeçalho e ao menos uma linha.'] }
   const header = rows[0] ?? ''
   const sep = (header.match(/;/g)?.length ?? 0) >= (header.match(/,/g)?.length ?? 0) ? ';' : ','

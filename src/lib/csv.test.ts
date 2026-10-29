@@ -3,7 +3,7 @@ import { toCsv } from './csv'
 describe('toCsv', () => {
   it('usa ; e BOM', () => {
     const csv = toCsv(['a', 'b'], [[1, 'x']])
-    expect(csv.startsWith('﻿')).toBe(true)
+    expect(csv.startsWith('\uFEFF')).toBe(true)
     expect(csv.slice(1)).toBe('a;b\r\n1;x')
   })
   it('escapa aspas, ; e quebras de linha', () => {
