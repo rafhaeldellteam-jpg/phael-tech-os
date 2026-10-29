@@ -124,7 +124,7 @@ test('cadastro, criação de empresa, convite e auditoria', async ({ page }, tes
   // Financeiro: contas sugeridas, cobrança gerada pela OS e recebimento.
   await page.goto('/financeiro?aba=configuracoes')
   await page.getByRole('button', { name: 'Criar contas e categorias sugeridas' }).click()
-  await expect(page.getByText('Conta bancária', { exact: true })).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Contas' }).getByRole('listitem')).toHaveCount(2)
   await page.goto(orderUrl)
   await page.getByRole('button', { name: 'Gerar cobrança' }).click()
   await page.getByRole('button', { name: 'Lançar' }).click()
