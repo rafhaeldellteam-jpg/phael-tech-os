@@ -18,6 +18,7 @@ import { requireSupabase } from '@/lib/supabase'
 import { equipmentTitle, useEquipmentTypes } from '../equipment/queries'
 import { useCompanyDetails } from '../settings/queries'
 import { isOverdue, modeLabels, nextStatuses, priorityLabels, stageTone, type NextStatus } from './meta'
+import { OrderBilling } from '../finance/OrderBilling'
 import { OrderItems } from './OrderItems'
 import { OrderReceipt } from './OrderReceipt'
 import { orderKeys, useAssignable, useOrder, useOrderEvents, useWorkflow } from './queries'
@@ -212,6 +213,7 @@ export function OrderDetailPage() {
           </section>
 
           <OrderItems companyId={company.id} orderId={o.id} editable={!finished} />
+          <OrderBilling companyId={company.id} orderId={o.id} orderNumber={o.number} />
 
           <section className="surface grid gap-2 rounded-lg p-5" aria-labelledby="diag-h">
             <h2 id="diag-h" className="font-semibold">

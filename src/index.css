@@ -43,6 +43,10 @@
     --border: #d6deeb;
     --text: #0b1a38;
     --text-muted: #546683;
+    /* Gráficos (validados: faixa de luminosidade, daltonismo e contraste) */
+    --chart-in: #1a5fc4;
+    --chart-out: #b45309;
+    --chart-grid: #e3e8f0;
     color-scheme: light;
   }
   .dark {
@@ -51,6 +55,9 @@
     --border: var(--color-navy-700);
     --text: #e8edf5;
     --text-muted: var(--color-navy-300);
+    --chart-in: #5b8ff0;
+    --chart-out: #c07a30;
+    --chart-grid: #22355a;
     color-scheme: dark;
   }
 

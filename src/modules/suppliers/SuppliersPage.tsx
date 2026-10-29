@@ -25,6 +25,7 @@ import { centsToInput, formatBRL, parseMoney } from '@/lib/money'
 import { requireSupabase } from '@/lib/supabase'
 import { formatTaxId, isValidTaxId, onlyDigits } from '@/lib/tax-id'
 import { moneyField, moneyToCents } from '@/lib/zod-money'
+import { NewEntryDialog } from '../finance/EntryDialogs'
 import { inventoryKeys } from '../inventory/queries'
 import { ProductPicker, type PickedProduct } from '../inventory/ProductPicker'
 
@@ -225,6 +226,9 @@ type PurchaseRow = NonNullable<ReturnType<typeof usePurchases>['data']>[number]
 
 function PurchaseList({ companyId, canBuy, canReceive }: { companyId: string; canBuy: boolean; canReceive: boolean }) {
   const queryClient = useQueryClient()
+  const { can } = useCompany()
+  const canFinance = can(['finance.write'])
+  const [payable, setPayable] = useState<PurchaseRow | null>(null)
   const purchases = usePurchases(companyId, true)
   const [editing, setEditing] = useState<PurchaseRow | 'new' | null>(null)
   const [confirm, setConfirm] = useState<{ kind: 'receive' | 'cancel'; row: PurchaseRow } | null>(null)
@@ -277,6 +281,13 @@ function PurchaseList({ companyId, canBuy, canReceive }: { companyId: string; ca
                   {': '}
                   {p.items.map((i) => `${i.qty}× ${i.product.name}`).join('; ')}
                 </p>
+                {p.status === 'received' && canFinance && (
+                  <div>
+                    <Button size="sm" variant="secondary" onClick={() => setPayable(p)}>
+                      Lançar conta a pagar
+                    </Button>
+                  </div>
+                )}
                 {p.status === 'draft' && (canBuy || canReceive) && (
                   <div className="flex flex-wrap gap-2">
                     {canReceive && (
@@ -303,6 +314,18 @@ function PurchaseList({ companyId, canBuy, canReceive }: { companyId: string; ca
       )}
 
       {editing && <PurchaseDialog companyId={companyId} purchase={editing === 'new' ? null : editing} onClose={() => setEditing(null)} />}
+      {payable && (
+        <NewEntryDialog
+          companyId={companyId}
+          direction="out"
+          preset={{
+            description: `Compra ${formatCode('CP', payable.number)}, ${payable.supplier.name}`,
+            amountCents: payable.items.reduce((a, i) => a + i.qty * i.unit_cost_cents, 0) + payable.freight_cents,
+            purchaseId: payable.id,
+          }}
+          onClose={() => setPayable(null)}
+        />
+      )}
       <ConfirmDialog
         open={Boolean(confirm)}
         onOpenChange={(o) => !o && setConfirm(null)}

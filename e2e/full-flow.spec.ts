@@ -121,6 +121,19 @@ test('cadastro, criação de empresa, convite e auditoria', async ({ page }, tes
   await page.goto('/estoque')
   await expect(page.getByRole('row', { name: /SSD 240 GB/ })).toContainText('2 un')
 
+  // Financeiro: contas sugeridas, cobrança gerada pela OS e recebimento.
+  await page.goto('/financeiro?aba=configuracoes')
+  await page.getByRole('button', { name: 'Criar contas e categorias sugeridas' }).click()
+  await expect(page.getByText('Conta bancária', { exact: true })).toBeVisible()
+  await page.goto(orderUrl)
+  await page.getByRole('button', { name: 'Gerar cobrança' }).click()
+  await page.getByRole('button', { name: 'Lançar' }).click()
+  await page.getByRole('button', { name: /À vista, vence/ }).click()
+  await page.getByRole('button', { name: 'Registrar recebimento' }).click()
+  await expect(page.getByText('Quitado', { exact: true })).toBeVisible()
+  await page.goto('/financeiro')
+  await expect(page.getByText('Recebimentos')).toBeVisible()
+
   await page.goto('/')
   await expect(page.getByRole('link', { name: /1\s*Em diagnóstico/ })).toBeVisible()
   await page.goto('/equipamentos')

@@ -14,6 +14,10 @@ export const entityLabels: Record<string, string> = {
   products: 'Produto',
   purchases: 'Compra',
   service_order_items: 'Item de OS',
+  finance_accounts: 'Conta financeira',
+  finance_categories: 'Categoria financeira',
+  finance_entries: 'Lançamento financeiro',
+  finance_payments: 'Pagamento',
 }
 
 export const actionLabels: Record<string, string> = {
@@ -88,6 +92,11 @@ const fieldLabels: Record<string, string> = {
   returned_reason: 'motivo da remoção',
   received_at: 'recebida em',
   invoice_number: 'nota fiscal',
+  amount_cents: 'valor (centavos)',
+  paid_cents: 'pago (centavos)',
+  canceled_at: 'cancelado em',
+  cancel_reason: 'motivo do cancelamento',
+  opening_balance_cents: 'saldo inicial (centavos)',
 }
 
 function show(value: Json | undefined): string {

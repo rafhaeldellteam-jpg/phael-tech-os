@@ -22,6 +22,10 @@ export type StockMovementKind =
   | 'order_return'
 export type PurchaseStatus = 'draft' | 'received' | 'canceled'
 export type OrderItemKind = 'service' | 'part'
+export type FinanceDirection = 'in' | 'out'
+export type PaymentMethod = 'pix' | 'cash' | 'debit' | 'credit' | 'transfer' | 'boleto' | 'other'
+export type FinanceAccountKind = 'cash' | 'bank' | 'digital'
+export type FinanceStatus = 'open' | 'partial' | 'paid' | 'canceled'
 
 type Timestamp = string
 
@@ -558,6 +562,152 @@ export interface Database {
         Update: never
         Relationships: []
       }
+      finance_accounts: {
+        Row: {
+          id: string
+          company_id: string
+          name: string
+          kind: FinanceAccountKind
+          opening_balance_cents: number
+          opening_date: string
+          active: boolean
+          created_at: Timestamp
+          updated_at: Timestamp
+        }
+        Insert: {
+          company_id: string
+          name: string
+          kind?: FinanceAccountKind
+          opening_balance_cents?: number
+          opening_date?: string
+          active?: boolean
+        }
+        Update: {
+          name?: string
+          kind?: FinanceAccountKind
+          opening_balance_cents?: number
+          opening_date?: string
+          active?: boolean
+        }
+        Relationships: []
+      }
+      finance_categories: {
+        Row: { id: string; company_id: string; name: string; direction: FinanceDirection; active: boolean; created_at: Timestamp }
+        Insert: { company_id: string; name: string; direction: FinanceDirection; active?: boolean }
+        Update: { name?: string; active?: boolean }
+        Relationships: []
+      }
+      finance_entries: {
+        Row: {
+          id: string
+          company_id: string
+          number: number
+          direction: FinanceDirection
+          description: string
+          category_id: string | null
+          client_id: string | null
+          supplier_id: string | null
+          order_id: string | null
+          purchase_id: string | null
+          amount_cents: number
+          paid_cents: number
+          issue_date: string
+          due_date: string
+          installment_no: number
+          installment_count: number
+          group_id: string
+          notes: string | null
+          canceled_at: Timestamp | null
+          cancel_reason: string | null
+          status: FinanceStatus
+          created_by: string | null
+          created_at: Timestamp
+          updated_at: Timestamp
+        }
+        Insert: never
+        Update: never
+        Relationships: [
+          {
+            foreignKeyName: 'finance_entries_company_id_category_id_fkey'
+            columns: ['company_id', 'category_id']
+            isOneToOne: false
+            referencedRelation: 'finance_categories'
+            referencedColumns: ['company_id', 'id']
+          },
+          {
+            foreignKeyName: 'finance_entries_company_id_client_id_fkey'
+            columns: ['company_id', 'client_id']
+            isOneToOne: false
+            referencedRelation: 'clients'
+            referencedColumns: ['company_id', 'id']
+          },
+          {
+            foreignKeyName: 'finance_entries_company_id_supplier_id_fkey'
+            columns: ['company_id', 'supplier_id']
+            isOneToOne: false
+            referencedRelation: 'suppliers'
+            referencedColumns: ['company_id', 'id']
+          },
+          {
+            foreignKeyName: 'finance_entries_company_id_order_id_fkey'
+            columns: ['company_id', 'order_id']
+            isOneToOne: false
+            referencedRelation: 'service_orders'
+            referencedColumns: ['company_id', 'id']
+          },
+        ]
+      }
+      finance_payments: {
+        Row: {
+          id: string
+          company_id: string
+          entry_id: string
+          account_id: string
+          method: PaymentMethod
+          amount_cents: number
+          paid_at: string
+          reversal_of: string | null
+          notes: string | null
+          actor_id: string | null
+          created_at: Timestamp
+        }
+        Insert: never
+        Update: never
+        Relationships: [
+          {
+            foreignKeyName: 'finance_payments_company_id_entry_id_fkey'
+            columns: ['company_id', 'entry_id']
+            isOneToOne: false
+            referencedRelation: 'finance_entries'
+            referencedColumns: ['company_id', 'id']
+          },
+          {
+            foreignKeyName: 'finance_payments_company_id_account_id_fkey'
+            columns: ['company_id', 'account_id']
+            isOneToOne: false
+            referencedRelation: 'finance_accounts'
+            referencedColumns: ['company_id', 'id']
+          },
+        ]
+      }
+      bank_statement_lines: {
+        Row: {
+          id: string
+          company_id: string
+          account_id: string
+          line_date: string
+          description: string
+          amount_cents: number
+          fingerprint: string
+          matched_payment_id: string | null
+          ignored: boolean
+          imported_by: string | null
+          created_at: Timestamp
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
     }
     Views: { [_ in never]: never }
     Functions: {
@@ -681,6 +831,59 @@ export interface Database {
         }[]
       }
       low_stock_count: { Args: { p_company_id: string }; Returns: number }
+      seed_finance_defaults: { Args: { p_company_id: string }; Returns: undefined }
+      create_finance_entry: { Args: { p_company_id: string; p_data: Json }; Returns: string }
+      update_finance_entry: { Args: { p_entry_id: string; p_data: Json }; Returns: undefined }
+      cancel_finance_entry: { Args: { p_entry_id: string; p_reason: string }; Returns: undefined }
+      register_payment: { Args: { p_entry_id: string; p_data: Json }; Returns: string }
+      reverse_payment: { Args: { p_payment_id: string; p_reason: string }; Returns: string }
+      finance_summary: {
+        Args: { p_company_id: string; p_from: string; p_to: string }
+        Returns: {
+          billed_cents: number
+          expenses_cents: number
+          estimated_result_cents: number
+          received_cents: number
+          paid_cents: number
+          cash_result_cents: number
+          receivable_open_cents: number
+          receivable_overdue_cents: number
+          payable_open_cents: number
+          payable_overdue_cents: number
+          balance_cents: number
+        }[]
+      }
+      cash_flow: {
+        Args: { p_company_id: string; p_from: string; p_to: string; p_group?: 'day' | 'month' }
+        Returns: { period: string; in_cents: number; out_cents: number; net_cents: number; balance_cents: number }[]
+      }
+      order_margins: {
+        Args: { p_company_id: string; p_from: string; p_to: string }
+        Returns: {
+          order_id: string
+          number: number
+          client_name: string
+          delivered_at: Timestamp
+          revenue_cents: number
+          cost_cents: number
+          margin_cents: number
+          received_cents: number
+        }[]
+      }
+      service_category_results: {
+        Args: { p_company_id: string; p_from: string; p_to: string }
+        Returns: { category: string; label: string; items: number; revenue_cents: number; cost_cents: number; margin_cents: number }[]
+      }
+      import_statement: {
+        Args: { p_account_id: string; p_lines: Json }
+        Returns: { imported: number; skipped: number }[]
+      }
+      match_statement_line: { Args: { p_line_id: string; p_payment_id: string | null }; Returns: undefined }
+      set_statement_line_ignored: { Args: { p_line_id: string; p_ignored: boolean }; Returns: undefined }
+      statement_suggestions: {
+        Args: { p_line_id: string }
+        Returns: { payment_id: string; paid_at: string; amount_cents: number; entry_description: string; days_apart: number }[]
+      }
     }
     Enums: {
       member_role: MemberRole
@@ -693,6 +896,9 @@ export interface Database {
       stock_movement_kind: StockMovementKind
       purchase_status: PurchaseStatus
       order_item_kind: OrderItemKind
+      finance_direction: FinanceDirection
+      payment_method: PaymentMethod
+      finance_account_kind: FinanceAccountKind
     }
     CompositeTypes: { [_ in never]: never }
   }

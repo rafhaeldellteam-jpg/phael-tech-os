@@ -8,8 +8,11 @@ import { useAuth } from '@/core/auth/useAuth'
 import { useActiveCompany, useCompany } from '@/core/company/useCompany'
 import { CURRENT_PHASE } from '@/core/permissions/navigation'
 import { roleLabels } from '@/core/permissions/permissions'
+import { formatBRL } from '@/lib/money'
 import { requireSupabase } from '@/lib/supabase'
 import { actionLabels, entityLabels } from '../settings/audit-format'
+import { presetRange } from '../finance/period'
+import { useSummary } from '../finance/queries'
 import { useLowStockCount } from '../inventory/queries'
 import { useOrderStats } from '../orders/queries'
 import { useCompanyDetails, useMembers } from '../settings/queries'
@@ -101,6 +104,9 @@ export function DashboardPage() {
     },
   ]
 
+  const canFinance = can(['finance.read'])
+  const month = presetRange('this_month')
+  const finance = useSummary(active.company.id, month.from, month.to, canFinance)
   const canInventory = can(['inventory.read'])
   const lowStock = useLowStockCount(active.company.id, canInventory)
 
@@ -164,13 +170,45 @@ export function DashboardPage() {
         </section>
       )}
 
+      {canFinance && finance.data && (
+        <section aria-labelledby="fin-h" className="grid gap-3">
+          <div className="flex items-baseline justify-between">
+            <h2 id="fin-h" className="text-lg font-semibold">
+              Financeiro do mês
+            </h2>
+            <Link to="/financeiro" className="text-sm font-medium underline underline-offset-4">
+              Abrir financeiro
+            </Link>
+          </div>
+          <ul className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-line bg-[var(--border)] sm:grid-cols-3 lg:grid-cols-6">
+            {[
+              { label: 'Faturamento', value: finance.data.billed_cents, to: '/financeiro' },
+              { label: 'Recebido', value: finance.data.received_cents, to: '/financeiro' },
+              { label: 'Despesas', value: finance.data.expenses_cents, to: '/financeiro?aba=pagar' },
+              { label: 'Resultado estimado', value: finance.data.estimated_result_cents, to: '/financeiro' },
+              { label: 'A receber vencido', value: finance.data.receivable_overdue_cents, to: '/financeiro?aba=receber', danger: true },
+              { label: 'A pagar vencido', value: finance.data.payable_overdue_cents, to: '/financeiro?aba=pagar', danger: true },
+            ].map((i) => (
+              <li key={i.label} className="bg-[var(--surface)]">
+                <Link to={i.to} className="grid h-full gap-1 p-4 hover:bg-[var(--surface-muted)]">
+                  <span className={`text-xl font-semibold tabular-nums [font-stretch:85%] ${(i.danger && i.value > 0) || i.value < 0 ? 'text-danger-600' : ''}`}>
+                    {formatBRL(i.value)}
+                  </span>
+                  <span className="text-[13px] text-muted">{i.label}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <div className="grid gap-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <section aria-labelledby="primeiros-passos" className="grid content-start gap-2">
           <h2 id="primeiros-passos" className="text-lg font-semibold">
             Primeiros passos
           </h2>
           <p className="text-sm text-muted">
-            Financeiro e garantias entram no painel nos próximos incrementos da Fase 3, sempre calculados a partir dos dados reais.
+            Garantias e agenda entram no painel nos próximos incrementos, sempre calculados a partir dos dados reais.
           </p>
           {details.isPending ? (
             <Spinner label="Verificando configuração" />

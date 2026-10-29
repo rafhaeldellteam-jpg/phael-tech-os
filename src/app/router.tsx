@@ -12,6 +12,7 @@ import { SignUpPage } from '@/modules/auth/SignUpPage'
 import { DashboardPage } from '@/modules/dashboard/DashboardPage'
 import { NotFoundPage } from '@/modules/NotFoundPage'
 import { CatalogPage } from '@/modules/catalog/CatalogPage'
+import { FinancePage } from '@/modules/finance/FinancePage'
 import { ProductDetailPage } from '@/modules/inventory/ProductDetailPage'
 import { ProductListPage } from '@/modules/inventory/ProductListPage'
 import { CreateCompanyPage } from '@/modules/onboarding/CreateCompanyPage'
@@ -123,6 +124,10 @@ export const router = createBrowserRouter([
               {
                 element: <RequirePermission anyOf={['suppliers.write', 'inventory.write']} />,
                 children: [{ path: '/fornecedores', element: <SuppliersPage /> }],
+              },
+              {
+                element: <RequirePermission anyOf={['finance.read']} />,
+                children: [{ path: '/financeiro', element: <FinancePage /> }],
               },
               {
                 element: <RequirePermission anyOf={['audit.read']} />,

@@ -56,11 +56,19 @@ Ordem sugerida, cada item com migração + testes SQL + telas + testes:
   remover devolve ao estoque e mantém o registro. Custo real separado do preço cobrado; margem visível só para
   financeiro e quem gerencia estoque.
 
+### Entregue: financeiro
+- Contas (caixa, banco, digital) com saldo inicial e categorias de receita/despesa (sugeridas sob demanda).
+- Contas a receber e a pagar com parcelamento exato em centavos, pagamentos parciais, estornos por lançamento
+  inverso, cancelamento com motivo; pagamentos imutáveis.
+- Cobrança gerada a partir da OS (total dos itens) e conta a pagar a partir da compra recebida.
+- Resumo por período separando competência (faturamento, despesas, resultado estimado) e caixa (recebimentos,
+  pagamentos, saldo), em aberto e vencidos, fluxo de caixa com gráfico e tabela, margem por OS e por categoria.
+- Conciliação por importação de extrato CSV com sugestão automática e sem duplicar reimportações.
+- Fórmulas documentadas em `docs/FINANCE.md`.
+
 ### Próximos incrementos
-1. Financeiro: contas a receber/pagar, pagamentos parciais e parcelas, estornos por lançamento inverso,
-   categorias, fluxo de caixa, margem por OS e por categoria de serviço.
-2. Garantias (por serviço/peça, a partir da entrega) e retorno em garantia.
-3. Agenda de atendimentos com conversão em OS.
+1. Garantias (por serviço/peça, a partir da entrega) e retorno em garantia.
+2. Agenda de atendimentos com conversão em OS.
 
 ## Fase 4 — Expansão
 Contratos recorrentes, sites e serviços digitais, relatórios com fórmulas

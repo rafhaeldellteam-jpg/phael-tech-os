@@ -60,7 +60,7 @@ export const navigation: NavSection[] = [
       { path: '/servicos', label: 'Catálogo de serviços', icon: Tags, requires: ['catalog.read'], phase: 3, ready: true },
       { path: '/estoque', label: 'Estoque e peças', icon: Boxes, requires: ['inventory.read'], phase: 3, ready: true },
       { path: '/fornecedores', label: 'Fornecedores e compras', icon: Truck, requires: ['suppliers.write', 'inventory.write'], phase: 3, ready: true },
-      { path: '/financeiro', label: 'Financeiro', icon: Wallet, requires: ['finance.read'], phase: 3 },
+      { path: '/financeiro', label: 'Financeiro', icon: Wallet, requires: ['finance.read'], phase: 3, ready: true },
       { path: '/garantias', label: 'Garantias', icon: ShieldCheck, requires: ['orders.read_all', 'orders.read_assigned'], phase: 3 },
       { path: '/sites', label: 'Sites e serviços digitais', icon: Globe, requires: ['clients.read'], phase: 4 },
       { path: '/relatorios', label: 'Relatórios', icon: BarChart3, requires: ['reports.operational', 'reports.financial'], phase: 4 },
