@@ -27,6 +27,8 @@ export type PaymentMethod = 'pix' | 'cash' | 'debit' | 'credit' | 'transfer' | '
 export type FinanceAccountKind = 'cash' | 'bank' | 'digital'
 export type FinanceStatus = 'open' | 'partial' | 'paid' | 'canceled'
 export type WarrantyClaimStatus = 'open' | 'accepted' | 'denied' | 'resolved'
+export type AppointmentKind = 'onsite' | 'remote' | 'dropoff' | 'pickup' | 'other'
+export type AppointmentStatus = 'scheduled' | 'confirmed' | 'done' | 'no_show' | 'canceled'
 
 type Timestamp = string
 
@@ -713,6 +715,53 @@ export interface Database {
         Update: never
         Relationships: []
       }
+      appointments: {
+        Row: {
+          id: string
+          company_id: string
+          number: number
+          kind: AppointmentKind
+          title: string
+          notes: string | null
+          client_id: string
+          equipment_id: string | null
+          order_id: string | null
+          assigned_to: string | null
+          starts_at: Timestamp
+          ends_at: Timestamp
+          location: string | null
+          status: AppointmentStatus
+          status_reason: string | null
+          created_by: string | null
+          created_at: Timestamp
+          updated_at: Timestamp
+        }
+        Insert: never
+        Update: never
+        Relationships: [
+          {
+            foreignKeyName: 'appointments_company_id_client_id_fkey'
+            columns: ['company_id', 'client_id']
+            isOneToOne: false
+            referencedRelation: 'clients'
+            referencedColumns: ['company_id', 'id']
+          },
+          {
+            foreignKeyName: 'appointments_company_id_equipment_id_fkey'
+            columns: ['company_id', 'equipment_id']
+            isOneToOne: false
+            referencedRelation: 'equipment'
+            referencedColumns: ['company_id', 'id']
+          },
+          {
+            foreignKeyName: 'appointments_company_id_order_id_fkey'
+            columns: ['company_id', 'order_id']
+            isOneToOne: false
+            referencedRelation: 'service_orders'
+            referencedColumns: ['company_id', 'id']
+          },
+        ]
+      }
       warranty_claims: {
         Row: {
           id: string
@@ -897,6 +946,10 @@ export interface Database {
       }
       open_warranty_claim: { Args: { p_order_id: string; p_data: Json }; Returns: { claim_id: string; return_order_id: string }[] }
       decide_warranty_claim: { Args: { p_claim_id: string; p_status: WarrantyClaimStatus; p_note?: string | null }; Returns: undefined }
+      save_appointment: { Args: { p_company_id: string; p_id: string | null; p_data: Json }; Returns: string }
+      set_appointment_status: { Args: { p_id: string; p_status: AppointmentStatus; p_reason?: string | null }; Returns: undefined }
+      convert_appointment_to_order: { Args: { p_id: string; p_reported_problem?: string | null }; Returns: string }
+      appointments_today: { Args: { p_company_id: string }; Returns: { total: number; mine: number; next_starts_at: Timestamp | null }[] }
       warranty_stats: { Args: { p_company_id: string }; Returns: { active_items: number; expiring_items: number; open_claims: number }[] }
       seed_finance_defaults: { Args: { p_company_id: string }; Returns: undefined }
       create_finance_entry: { Args: { p_company_id: string; p_data: Json }; Returns: string }
@@ -964,6 +1017,8 @@ export interface Database {
       purchase_status: PurchaseStatus
       order_item_kind: OrderItemKind
       warranty_claim_status: WarrantyClaimStatus
+      appointment_kind: AppointmentKind
+      appointment_status: AppointmentStatus
       finance_direction: FinanceDirection
       payment_method: PaymentMethod
       finance_account_kind: FinanceAccountKind

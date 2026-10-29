@@ -165,6 +165,27 @@ test('cadastro, criação de empresa, convite e auditoria', async ({ page }, tes
   await page.getByLabel('Pesquisar clientes e equipamentos').fill('inspiron')
   await expect(page.getByRole('option', { name: /Dell Inspiron 15/ })).toBeVisible()
 
+  // Agenda: agendamento na semana atual, confirmação e conversão em OS.
+  const now = new Date()
+  const pad = (n: number) => String(n).padStart(2, '0')
+  const startLocal = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T23:00`
+  await page.goto('/agenda')
+  await page.getByRole('button', { name: 'Novo agendamento' }).click()
+  await page.getByLabel('Assunto').fill('Visita: impressora travando')
+  await page.getByRole('combobox', { name: 'Cliente' }).fill('maria')
+  await page.getByRole('option', { name: /Maria Souza/ }).click()
+  await page.getByLabel('Início').fill(startLocal)
+  await page.getByLabel('Local').fill('Rua das Flores, 100')
+  await page.getByRole('button', { name: 'Agendar' }).click()
+  await page.getByRole('button', { name: /Visita: impressora travando/ }).click()
+  await page.getByRole('button', { name: 'Confirmar' }).click()
+  await page.getByRole('button', { name: /Visita: impressora travando/ }).click()
+  await expect(page.getByRole('dialog').getByText('Confirmado', { exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Converter em OS' }).click()
+  await page.getByRole('button', { name: 'Abrir OS' }).click()
+  await expect(page.getByRole('heading', { name: /OS-0003/ })).toBeVisible()
+  await expect(page.getByText('Atendimento externo')).toBeVisible()
+
   // Financeiro abre com dados reais; módulo futuro aparece como indisponível.
   await page.goto('/relatorios')
   await expect(page.getByText('Módulo ainda não disponível')).toBeVisible()

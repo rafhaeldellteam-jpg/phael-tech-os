@@ -73,8 +73,17 @@ Ordem sugerida, cada item com migração + testes SQL + telas + testes:
   em análise -> aceita -> resolvida, ou negada com motivo. Fora do prazo, só como cortesia com motivo registrado.
 - Prazos impressos no comprovante de entrega; acionamentos em andamento no painel.
 
-### Próximos incrementos
-1. Agenda de atendimentos com conversão em OS.
+### Entregue: agenda
+- Agendamentos (visita, remoto, cliente traz equipamento, retirada/entrega) com responsável, local e
+  observações; visão semanal com filtro por responsável e resumo do dia no painel.
+- O mesmo técnico não fica em dois atendimentos ativos ao mesmo tempo (constraint de exclusão no banco).
+- Situações agendado -> confirmado -> realizado / não compareceu / cancelado (com motivo); o técnico
+  responsável registra o resultado do próprio atendimento.
+- Conversão em OS com cliente, equipamento, modo e técnico do agendamento.
+
+### Próximos incrementos (pendentes da Fase 2)
+1. Diagnóstico com checklist e orçamento com aprovação do cliente e versões.
+2. PDFs e anexos (fotos de entrada, laudos).
 
 ## Fase 4 — Expansão
 Contratos recorrentes, sites e serviços digitais, relatórios com fórmulas

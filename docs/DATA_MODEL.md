@@ -102,3 +102,10 @@ automações (`automation_runs` com chave de idempotência) e planos SaaS.
   `open_warranty_claim` e `decide_warranty_claim`; auditoria por trigger.
 - `service_orders.warranty_of` liga o retorno à OS original; um retorno não gera outro retorno.
 
+## Agenda (implementado)
+- `appointments`: número sequencial (AG), tipo, assunto, cliente, equipamento opcional, OS gerada, responsável,
+  início/fim (até 12 h), local, situação e motivo. `appointments_no_overlap` (exclude using gist, btree_gist)
+  impede sobreposição do mesmo responsável entre agendamentos agendados/confirmados.
+- Escrita só por `save_appointment`, `set_appointment_status` e `convert_appointment_to_order`
+  (que chama `create_service_order`, mantendo as mesmas validações e permissões da OS).
+

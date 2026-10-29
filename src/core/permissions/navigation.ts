@@ -51,7 +51,7 @@ export const navigation: NavSection[] = [
       { path: '/equipamentos', label: 'Equipamentos', icon: Laptop, requires: ['equipment.read'], phase: 2, ready: true },
       { path: '/diagnosticos', label: 'Diagnósticos', icon: Stethoscope, requires: ['diagnostics.write'], phase: 2 },
       { path: '/orcamentos', label: 'Orçamentos', icon: FileSignature, requires: ['quotes.read'], phase: 2 },
-      { path: '/agenda', label: 'Agenda', icon: CalendarDays, requires: ['schedule.read'], phase: 3 },
+      { path: '/agenda', label: 'Agenda', icon: CalendarDays, requires: ['schedule.read'], phase: 3, ready: true },
     ],
   },
   {

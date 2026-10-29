@@ -15,6 +15,8 @@ import { presetRange } from '../finance/period'
 import { useSummary } from '../finance/queries'
 import { useLowStockCount } from '../inventory/queries'
 import { useWarrantyStats } from '../warranties/queries'
+import { useAppointmentsToday } from '../schedule/queries'
+import { formatTime } from '../schedule/dates'
 import { useOrderStats } from '../orders/queries'
 import { useCompanyDetails, useMembers } from '../settings/queries'
 
@@ -111,6 +113,8 @@ export function DashboardPage() {
   const canInventory = can(['inventory.read'])
   const lowStock = useLowStockCount(active.company.id, canInventory)
   const warranty = useWarrantyStats(active.company.id, canOrders)
+  const canSchedule = can(['schedule.read'])
+  const agenda = useAppointmentsToday(active.company.id, canSchedule)
 
   const firstName = ((user?.user_metadata?.full_name as string | undefined) ?? '').split(' ')[0]
   const profileComplete = Boolean(details.data?.tax_id && (details.data.email || details.data.phone))
@@ -132,6 +136,26 @@ export function DashboardPage() {
             <strong className="tabular-nums">{lowStock.data}</strong> produto(s) no estoque mínimo ou abaixo.
           </span>
           <span className="font-medium underline underline-offset-4">Ver o que repor</span>
+        </Link>
+      )}
+
+      {canSchedule && agenda.isSuccess && (
+        <Link
+          to="/agenda"
+          className="surface flex flex-wrap items-center justify-between gap-3 rounded-lg px-4 py-3 text-sm hover:bg-[var(--surface-muted)]"
+        >
+          <span>
+            {agenda.data.total === 0 ? (
+              'Nenhum atendimento agendado para hoje.'
+            ) : (
+              <>
+                <strong className="tabular-nums">{agenda.data.total}</strong> atendimento(s) hoje
+                {agenda.data.mine > 0 && <>, {agenda.data.mine} com você</>}
+                {agenda.data.next_starts_at && <>. Próximo às {formatTime(agenda.data.next_starts_at)}</>}.
+              </>
+            )}
+          </span>
+          <span className="font-medium underline underline-offset-4">Abrir agenda</span>
         </Link>
       )}
 
