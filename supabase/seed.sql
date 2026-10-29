@@ -1,0 +1,4 @@
+-- Dados de demonstração para o ambiente LOCAL (aplicados por `supabase db reset`).
+-- Nunca rode este arquivo em produção.
+-- Fase 1: intencionalmente vazio. Crie sua conta pela tela de cadastro e a
+-- empresa pelo onboarding; assim todo dado nasce pelas mesmas regras de produção.

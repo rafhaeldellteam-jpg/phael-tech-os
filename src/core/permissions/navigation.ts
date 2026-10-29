@@ -1,0 +1,91 @@
+import {
+  Activity,
+  BarChart3,
+  BookOpen,
+  Boxes,
+  Building2,
+  CalendarDays,
+  ClipboardList,
+  FileSignature,
+  Globe,
+  LayoutDashboard,
+  Laptop,
+  ScrollText,
+  ShieldCheck,
+  Stethoscope,
+  Tags,
+  Truck,
+  Users,
+  UsersRound,
+  Wallet,
+  type LucideIcon,
+} from 'lucide-react'
+import { canAny, type AccessRequirement } from './permissions'
+
+export interface NavItem {
+  path: string
+  label: string
+  icon: LucideIcon
+  requires: AccessRequirement
+  /** Fase do roadmap em que o módulo fica disponível. Itens > fase atual aparecem como indisponíveis. */
+  phase: number
+}
+
+export interface NavSection {
+  label: string
+  items: NavItem[]
+}
+
+export const CURRENT_PHASE = 1
+
+export const navigation: NavSection[] = [
+  {
+    label: 'Operação',
+    items: [
+      { path: '/', label: 'Painel', icon: LayoutDashboard, requires: [], phase: 1 },
+      { path: '/ordens', label: 'Ordens de serviço', icon: ClipboardList, requires: ['orders.read_all', 'orders.read_assigned'], phase: 2 },
+      { path: '/clientes', label: 'Clientes', icon: UsersRound, requires: ['clients.read'], phase: 2 },
+      { path: '/equipamentos', label: 'Equipamentos', icon: Laptop, requires: ['equipment.read'], phase: 2 },
+      { path: '/diagnosticos', label: 'Diagnósticos', icon: Stethoscope, requires: ['diagnostics.write'], phase: 2 },
+      { path: '/orcamentos', label: 'Orçamentos', icon: FileSignature, requires: ['quotes.read'], phase: 2 },
+      { path: '/agenda', label: 'Agenda', icon: CalendarDays, requires: ['schedule.read'], phase: 3 },
+    ],
+  },
+  {
+    label: 'Gestão',
+    items: [
+      { path: '/servicos', label: 'Catálogo de serviços', icon: Tags, requires: ['catalog.read'], phase: 3 },
+      { path: '/estoque', label: 'Estoque e peças', icon: Boxes, requires: ['inventory.read'], phase: 3 },
+      { path: '/fornecedores', label: 'Fornecedores', icon: Truck, requires: ['suppliers.write'], phase: 3 },
+      { path: '/financeiro', label: 'Financeiro', icon: Wallet, requires: ['finance.read'], phase: 3 },
+      { path: '/garantias', label: 'Garantias', icon: ShieldCheck, requires: ['orders.read_all', 'orders.read_assigned'], phase: 3 },
+      { path: '/sites', label: 'Sites e serviços digitais', icon: Globe, requires: ['clients.read'], phase: 4 },
+      { path: '/relatorios', label: 'Relatórios', icon: BarChart3, requires: ['reports.operational', 'reports.financial'], phase: 4 },
+      { path: '/conhecimento', label: 'Base de conhecimento', icon: BookOpen, requires: ['knowledge.read'], phase: 4 },
+    ],
+  },
+  {
+    label: 'Empresa',
+    items: [
+      { path: '/empresa', label: 'Dados da empresa', icon: Building2, requires: ['company.read'], phase: 1 },
+      { path: '/equipe', label: 'Equipe e permissões', icon: Users, requires: ['members.read'], phase: 1 },
+      { path: '/auditoria', label: 'Auditoria', icon: ScrollText, requires: ['audit.read'], phase: 1 },
+      { path: '/atividade', label: 'Automações', icon: Activity, requires: ['company.update'], phase: 4 },
+    ],
+  },
+]
+
+/** Navegação visível para o usuário: remove itens sem permissão e seções vazias. */
+export function visibleNavigation(granted: ReadonlySet<string>): NavSection[] {
+  return navigation
+    .map((s) => ({ ...s, items: s.items.filter((i) => canAny(granted, i.requires)) }))
+    .filter((s) => s.items.length > 0)
+}
+
+export function isAvailable(item: NavItem): boolean {
+  return item.phase <= CURRENT_PHASE
+}
+
+export function findNavItem(path: string): NavItem | undefined {
+  return navigation.flatMap((s) => s.items).find((i) => i.path === path)
+}

@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  database:
+    name: Banco (PostgreSQL puro + stub do Supabase)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: phael_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Migrações + testes de RLS, permissões, convites, auditoria e concorrência
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/phael_test
+        run: bash scripts/test-db.sh --vanilla
+
+  app:
+    name: Frontend (lint, tipos, unitários, build, e2e público)
+    runs-on: ubuntu-latest
+    env:
+      VITE_SUPABASE_URL: http://127.0.0.1:54321
+      VITE_SUPABASE_ANON_KEY: ci-placeholder-key-not-a-secret-000000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test e2e/public.spec.ts
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report-app
+          path: playwright-report
+          retention-days: 7
+
+  supabase:
+    name: Supabase local (migrações reais + fluxo completo)
+    runs-on: ubuntu-latest
+    needs: [database]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+      - name: Iniciar Supabase local
+        run: |
+          [ -f supabase/config.toml ] || npx supabase init --force
+          npx supabase start
+      - name: Testes de banco no Supabase real
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+        run: bash scripts/test-db.sh
+      - name: Fluxo completo no navegador
+        run: |
+          eval "$(npx supabase status -o env | grep -E '^(API_URL|ANON_KEY)=')"
+          export VITE_SUPABASE_URL="$API_URL" VITE_SUPABASE_ANON_KEY="$ANON_KEY" E2E_SUPABASE=1
+          npx playwright install --with-deps chromium
+          npx playwright test e2e/full-flow.spec.ts --project=desktop
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report-supabase
+          path: playwright-report
+          retention-days: 7

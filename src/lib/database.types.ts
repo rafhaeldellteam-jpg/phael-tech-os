@@ -1,0 +1,161 @@
+/**
+ * Tipos do banco no formato gerado pelo Supabase CLI.
+ * Escrito à mão na Fase 1 a partir das migrações; regenere com
+ * `npm run db:types` depois de `supabase start` e substitua este arquivo.
+ */
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
+
+export type MemberRole = 'admin' | 'technician' | 'finance' | 'attendant'
+export type MemberStatus = 'active' | 'suspended'
+
+type Timestamp = string
+
+export interface Database {
+  public: {
+    Tables: {
+      companies: {
+        Row: {
+          id: string
+          name: string
+          legal_name: string | null
+          tax_id: string | null
+          email: string | null
+          phone: string | null
+          timezone: string
+          currency: string
+          created_by: string | null
+          created_at: Timestamp
+          updated_at: Timestamp
+        }
+        Insert: never
+        Update: {
+          name?: string
+          legal_name?: string | null
+          tax_id?: string | null
+          email?: string | null
+          phone?: string | null
+          timezone?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: { id: string; full_name: string | null; created_at: Timestamp; updated_at: Timestamp }
+        Insert: never
+        Update: { full_name?: string | null }
+        Relationships: []
+      }
+      company_members: {
+        Row: {
+          id: string
+          company_id: string
+          user_id: string
+          role: MemberRole
+          status: MemberStatus
+          created_at: Timestamp
+          updated_at: Timestamp
+        }
+        Insert: never
+        Update: never
+        Relationships: [
+          {
+            foreignKeyName: 'company_members_company_id_fkey'
+            columns: ['company_id']
+            isOneToOne: false
+            referencedRelation: 'companies'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      permissions: {
+        Row: { key: string; module: string; description: string }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      role_permissions: {
+        Row: { role: MemberRole; permission_key: string }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      member_permission_overrides: {
+        Row: {
+          member_id: string
+          company_id: string
+          permission_key: string
+          granted: boolean
+          created_by: string | null
+          created_at: Timestamp
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      audit_log: {
+        Row: {
+          id: number
+          company_id: string
+          actor_id: string | null
+          action: string
+          entity: string
+          entity_id: string | null
+          changes: Json
+          created_at: Timestamp
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      company_invitations: {
+        Row: {
+          id: string
+          company_id: string
+          email: string
+          role: MemberRole
+          invited_by: string | null
+          expires_at: Timestamp
+          accepted_at: Timestamp | null
+          accepted_by: string | null
+          revoked_at: Timestamp | null
+          created_at: Timestamp
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+    }
+    Views: { [_ in never]: never }
+    Functions: {
+      my_permissions: { Args: { p_company_id: string }; Returns: string[] }
+      create_company: { Args: { p_name: string; p_legal_name?: string | null }; Returns: string }
+      update_member: {
+        Args: { p_member_id: string; p_role: MemberRole; p_status: MemberStatus }
+        Returns: undefined
+      }
+      set_member_permission: {
+        Args: { p_member_id: string; p_permission_key: string; p_granted: boolean | null }
+        Returns: undefined
+      }
+      create_invitation: {
+        Args: { p_company_id: string; p_email: string; p_role: MemberRole; p_valid_days?: number }
+        Returns: string
+      }
+      revoke_invitation: { Args: { p_invitation_id: string }; Returns: undefined }
+      accept_invitation: { Args: { p_token: string }; Returns: string }
+      list_company_members: {
+        Args: { p_company_id: string }
+        Returns: {
+          member_id: string
+          user_id: string
+          full_name: string | null
+          email: string
+          role: MemberRole
+          status: MemberStatus
+          created_at: Timestamp
+        }[]
+      }
+    }
+    Enums: { member_role: MemberRole; member_status: MemberStatus }
+    CompositeTypes: { [_ in never]: never }
+  }
+}

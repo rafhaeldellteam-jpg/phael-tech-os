@@ -1,0 +1,82 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+  Tokens Phael Tech OS
+  - navy: identidade (menu lateral nos dois temas)
+  - ok (verde): pronto, concluído, sucesso
+  - attn (laranja): requer atenção, pendente
+  - danger: erro, ação destrutiva
+*/
+@theme {
+  --font-sans: 'Archivo', ui-sans-serif, system-ui, sans-serif;
+
+  --color-navy-950: #0a1525;
+  --color-navy-900: #0f1e33;
+  --color-navy-800: #16253b;
+  --color-navy-700: #22344f;
+  --color-navy-600: #34496a;
+  --color-navy-300: #9fb0c8;
+  --color-navy-100: #dfe6f0;
+
+  --color-paper: #f4f6f9;
+  --color-ok-600: #12875a;
+  --color-ok-500: #1fa971;
+  --color-ok-100: #dcf3e8;
+  --color-attn-600: #b85f0c;
+  --color-attn-500: #e8831f;
+  --color-attn-100: #fcebd8;
+  --color-danger-600: #c2362f;
+  --color-danger-100: #fbe3e1;
+}
+
+@layer base {
+  :root {
+    --surface: #ffffff;
+    --surface-muted: var(--color-paper);
+    --border: #d9e0ea;
+    --text: #13213a;
+    --text-muted: #5a6b84;
+    color-scheme: light;
+  }
+  .dark {
+    --surface: var(--color-navy-800);
+    --surface-muted: var(--color-navy-950);
+    --border: var(--color-navy-700);
+    --text: #e8edf5;
+    --text-muted: var(--color-navy-300);
+    color-scheme: dark;
+  }
+
+  html {
+    font-family: var(--font-sans);
+    font-feature-settings: 'tnum' 1;
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    background: var(--surface-muted);
+    color: var(--text);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-ok-500);
+    outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@utility surface {
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+@utility text-muted {
+  color: var(--text-muted);
+}
+@utility border-line {
+  border-color: var(--border);
+}
