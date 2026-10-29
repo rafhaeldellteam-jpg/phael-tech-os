@@ -1,6 +1,6 @@
 # Roadmap
 
-## Fase 1 — Fundação (esta entrega)
+## Fase 1 — Fundação ✅ (verificada no CI: banco, frontend e fluxo completo com Supabase)
 - Estrutura do frontend (React, TS strict, Vite, Tailwind, Router, TanStack Query, RHF + Zod, Radix).
 - Banco multiempresa: empresas, perfis, membros, papéis, permissões, exceções por pessoa.
 - Convites com token seguro, auditoria imutável, numeração sequencial concorrente.
