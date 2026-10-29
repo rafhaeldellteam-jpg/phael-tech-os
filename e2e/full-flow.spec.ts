@@ -157,7 +157,9 @@ test('cadastro, criação de empresa, convite e auditoria', async ({ page }, tes
   await expect(page.getByRole('link', { name: 'Retorno: OS-0002' })).toBeVisible()
 
   await page.goto('/')
-  await expect(page.getByRole('link', { name: /1\s*Em diagnóstico/ })).toBeVisible()
+  // OS-0001 foi entregue; seguem abertas a OS de retorno (garantia) e a da agenda.
+  await expect(page.getByRole('link', { name: /2\s*Em andamento/ })).toBeVisible()
+  await expect(page.getByText(/1 acionamento\(s\) de garantia em andamento/)).toBeVisible()
   await page.goto('/equipamentos')
   await page.getByRole('link', { name: 'Dell Inspiron 15' }).click()
 
