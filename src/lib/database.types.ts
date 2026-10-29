@@ -13,6 +13,15 @@ export type ServiceMode = 'bench' | 'remote' | 'onsite'
 export type OrderPriority = 'low' | 'normal' | 'high' | 'urgent'
 export type OrderEventKind = 'created' | 'status' | 'assigned' | 'note' | 'updated'
 export type OrderStage = 'open' | 'waiting' | 'working' | 'ready' | 'done' | 'stopped'
+export type StockMovementKind =
+  | 'purchase_in'
+  | 'adjustment_in'
+  | 'adjustment_out'
+  | 'supplier_return'
+  | 'order_consume'
+  | 'order_return'
+export type PurchaseStatus = 'draft' | 'received' | 'canceled'
+export type OrderItemKind = 'service' | 'part'
 
 type Timestamp = string
 
@@ -307,6 +316,248 @@ export interface Database {
         Update: never
         Relationships: []
       }
+      service_categories: {
+        Row: { key: string; label: string; sort: number }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      service_catalog: {
+        Row: {
+          id: string
+          company_id: string
+          name: string
+          category: string
+          description: string | null
+          price_cents: number
+          cost_cents: number
+          duration_minutes: number | null
+          warranty_days: number | null
+          conditions: string | null
+          active: boolean
+          created_at: Timestamp
+          updated_at: Timestamp
+        }
+        Insert: {
+          company_id: string
+          name: string
+          category?: string
+          description?: string | null
+          price_cents?: number
+          cost_cents?: number
+          duration_minutes?: number | null
+          warranty_days?: number | null
+          conditions?: string | null
+          active?: boolean
+        }
+        Update: {
+          name?: string
+          category?: string
+          description?: string | null
+          price_cents?: number
+          cost_cents?: number
+          duration_minutes?: number | null
+          warranty_days?: number | null
+          conditions?: string | null
+          active?: boolean
+        }
+        Relationships: []
+      }
+      suppliers: {
+        Row: {
+          id: string
+          company_id: string
+          name: string
+          tax_id: string | null
+          contact: string | null
+          email: string | null
+          phone: string | null
+          website: string | null
+          notes: string | null
+          active: boolean
+          created_at: Timestamp
+          updated_at: Timestamp
+        }
+        Insert: {
+          company_id: string
+          name: string
+          tax_id?: string | null
+          contact?: string | null
+          email?: string | null
+          phone?: string | null
+          website?: string | null
+          notes?: string | null
+          active?: boolean
+        }
+        Update: {
+          name?: string
+          tax_id?: string | null
+          contact?: string | null
+          email?: string | null
+          phone?: string | null
+          website?: string | null
+          notes?: string | null
+          active?: boolean
+        }
+        Relationships: []
+      }
+      products: {
+        Row: {
+          id: string
+          company_id: string
+          sku: string
+          name: string
+          category: string | null
+          manufacturer: string | null
+          supplier_id: string | null
+          unit: string
+          cost_cents: number
+          price_cents: number
+          min_qty: number
+          qty_on_hand: number
+          tracks_serial: boolean
+          active: boolean
+          search_text: string
+          created_at: Timestamp
+          updated_at: Timestamp
+        }
+        Insert: {
+          company_id: string
+          sku: string
+          name: string
+          category?: string | null
+          manufacturer?: string | null
+          supplier_id?: string | null
+          unit?: string
+          cost_cents?: number
+          price_cents?: number
+          min_qty?: number
+          tracks_serial?: boolean
+          active?: boolean
+        }
+        Update: {
+          sku?: string
+          name?: string
+          category?: string | null
+          manufacturer?: string | null
+          supplier_id?: string | null
+          unit?: string
+          price_cents?: number
+          min_qty?: number
+          tracks_serial?: boolean
+          active?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'products_company_id_supplier_id_fkey'
+            columns: ['company_id', 'supplier_id']
+            isOneToOne: false
+            referencedRelation: 'suppliers'
+            referencedColumns: ['company_id', 'id']
+          },
+        ]
+      }
+      stock_movements: {
+        Row: {
+          id: number
+          company_id: string
+          product_id: string
+          kind: StockMovementKind
+          qty: number
+          direction: number
+          unit_cost_cents: number
+          balance_after: number
+          serial_number: string | null
+          reason: string | null
+          order_id: string | null
+          purchase_id: string | null
+          actor_id: string | null
+          created_at: Timestamp
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      purchases: {
+        Row: {
+          id: string
+          company_id: string
+          number: number
+          supplier_id: string
+          status: PurchaseStatus
+          invoice_number: string | null
+          ordered_at: string
+          received_at: Timestamp | null
+          freight_cents: number
+          notes: string | null
+          created_by: string | null
+          created_at: Timestamp
+          updated_at: Timestamp
+        }
+        Insert: never
+        Update: never
+        Relationships: [
+          {
+            foreignKeyName: 'purchases_company_id_supplier_id_fkey'
+            columns: ['company_id', 'supplier_id']
+            isOneToOne: false
+            referencedRelation: 'suppliers'
+            referencedColumns: ['company_id', 'id']
+          },
+        ]
+      }
+      purchase_items: {
+        Row: {
+          id: string
+          company_id: string
+          purchase_id: string
+          product_id: string
+          qty: number
+          unit_cost_cents: number
+        }
+        Insert: never
+        Update: never
+        Relationships: [
+          {
+            foreignKeyName: 'purchase_items_company_id_purchase_id_fkey'
+            columns: ['company_id', 'purchase_id']
+            isOneToOne: false
+            referencedRelation: 'purchases'
+            referencedColumns: ['company_id', 'id']
+          },
+          {
+            foreignKeyName: 'purchase_items_company_id_product_id_fkey'
+            columns: ['company_id', 'product_id']
+            isOneToOne: false
+            referencedRelation: 'products'
+            referencedColumns: ['company_id', 'id']
+          },
+        ]
+      }
+      service_order_items: {
+        Row: {
+          id: string
+          company_id: string
+          order_id: string
+          kind: OrderItemKind
+          catalog_id: string | null
+          product_id: string | null
+          description: string
+          qty: number
+          unit_price_cents: number
+          unit_cost_cents: number
+          discount_cents: number
+          serial_number: string | null
+          warranty_days: number | null
+          returned_at: Timestamp | null
+          returned_reason: string | null
+          added_by: string | null
+          created_at: Timestamp
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
     }
     Views: { [_ in never]: never }
     Functions: {
@@ -402,6 +653,34 @@ export interface Database {
         Args: { p_company_id: string }
         Returns: { status: string; total: number; overdue: number }[]
       }
+      seed_service_catalog: { Args: { p_company_id: string }; Returns: number }
+      adjust_stock: {
+        Args: {
+          p_product_id: string
+          p_kind: StockMovementKind
+          p_qty: number
+          p_reason: string
+          p_serial?: string | null
+        }
+        Returns: number
+      }
+      save_purchase: { Args: { p_company_id: string; p_purchase_id: string | null; p_data: Json }; Returns: string }
+      receive_purchase: { Args: { p_purchase_id: string }; Returns: undefined }
+      cancel_purchase: { Args: { p_purchase_id: string }; Returns: undefined }
+      add_order_item: { Args: { p_order_id: string; p_data: Json }; Returns: string }
+      remove_order_item: { Args: { p_item_id: string; p_reason: string }; Returns: undefined }
+      service_order_totals: {
+        Args: { p_order_id: string }
+        Returns: {
+          services_cents: number
+          parts_cents: number
+          discount_cents: number
+          total_cents: number
+          cost_cents: number | null
+          margin_cents: number | null
+        }[]
+      }
+      low_stock_count: { Args: { p_company_id: string }; Returns: number }
     }
     Enums: {
       member_role: MemberRole
@@ -411,6 +690,9 @@ export interface Database {
       service_mode: ServiceMode
       order_priority: OrderPriority
       order_event_kind: OrderEventKind
+      stock_movement_kind: StockMovementKind
+      purchase_status: PurchaseStatus
+      order_item_kind: OrderItemKind
     }
     CompositeTypes: { [_ in never]: never }
   }

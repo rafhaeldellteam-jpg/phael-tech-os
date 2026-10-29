@@ -82,6 +82,45 @@ test('cadastro, criação de empresa, convite e auditoria', async ({ page }, tes
   await page.getByRole('button', { name: 'Registrar observação' }).click()
   await expect(page.getByText('Fonte queimada, testando outra')).toBeVisible()
 
+  const orderUrl = page.url()
+
+  // Estoque: fornecedor, produto, compra recebida e peça lançada na OS.
+  await page.goto('/fornecedores')
+  await page.getByRole('button', { name: 'Novo fornecedor' }).click()
+  await page.getByLabel('Nome', { exact: true }).fill('Distribuidora Teste')
+  await page.getByRole('button', { name: 'Cadastrar fornecedor' }).click()
+  await expect(page.getByText('Distribuidora Teste')).toBeVisible()
+
+  await page.goto('/estoque')
+  await page.getByRole('button', { name: 'Novo produto' }).click()
+  await page.getByLabel('Código (SKU)').fill('SSD-240')
+  await page.getByLabel('Nome', { exact: true }).fill('SSD 240 GB')
+  await page.getByLabel('Preço de venda (R$)').fill('220,00')
+  await page.getByRole('button', { name: 'Cadastrar produto' }).click()
+  await expect(page.getByRole('heading', { name: 'SSD 240 GB' })).toBeVisible()
+
+  await page.goto('/fornecedores?aba=compras')
+  await page.getByRole('button', { name: 'Nova compra' }).click()
+  await page.getByLabel('Fornecedor').selectOption({ label: 'Distribuidora Teste' })
+  await page.getByLabel('Produto 1').fill('ssd')
+  await page.getByRole('option', { name: /SSD 240 GB/ }).click()
+  await page.getByLabel('Qtd.').fill('3')
+  await page.getByLabel('Custo un. (R$)').fill('100,00')
+  await page.getByRole('button', { name: 'Salvar rascunho' }).click()
+  await page.getByRole('button', { name: 'Receber' }).click()
+  await page.getByRole('button', { name: 'Receber e dar entrada' }).click()
+  await expect(page.getByText('Recebida', { exact: true })).toBeVisible()
+
+  await page.goto(orderUrl)
+  await page.getByRole('button', { name: 'Peça' }).click()
+  await page.getByLabel('Peça', { exact: true }).fill('ssd')
+  await page.getByRole('option', { name: /SSD 240 GB/ }).click()
+  await page.getByRole('button', { name: 'Lançar e baixar do estoque' }).click()
+  await expect(page.getByText('R$ 220,00').first()).toBeVisible()
+
+  await page.goto('/estoque')
+  await expect(page.getByRole('row', { name: /SSD 240 GB/ })).toContainText('2 un')
+
   await page.goto('/')
   await expect(page.getByRole('link', { name: /1\s*Em diagnóstico/ })).toBeVisible()
   await page.goto('/equipamentos')

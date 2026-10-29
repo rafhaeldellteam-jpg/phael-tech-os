@@ -11,7 +11,11 @@ import { ResetPasswordPage } from '@/modules/auth/ResetPasswordPage'
 import { SignUpPage } from '@/modules/auth/SignUpPage'
 import { DashboardPage } from '@/modules/dashboard/DashboardPage'
 import { NotFoundPage } from '@/modules/NotFoundPage'
+import { CatalogPage } from '@/modules/catalog/CatalogPage'
+import { ProductDetailPage } from '@/modules/inventory/ProductDetailPage'
+import { ProductListPage } from '@/modules/inventory/ProductListPage'
 import { CreateCompanyPage } from '@/modules/onboarding/CreateCompanyPage'
+import { SuppliersPage } from '@/modules/suppliers/SuppliersPage'
 import { OrderDetailPage } from '@/modules/orders/OrderDetailPage'
 import { OrderFormPage } from '@/modules/orders/OrderFormPage'
 import { OrderListPage } from '@/modules/orders/OrderListPage'
@@ -104,6 +108,21 @@ export const router = createBrowserRouter([
                   { path: '/equipamentos/novo', element: <EquipmentFormPage /> },
                   { path: '/equipamentos/:id/editar', element: <EquipmentFormPage /> },
                 ],
+              },
+              {
+                element: <RequirePermission anyOf={['catalog.read']} />,
+                children: [{ path: '/servicos', element: <CatalogPage /> }],
+              },
+              {
+                element: <RequirePermission anyOf={['inventory.read']} />,
+                children: [
+                  { path: '/estoque', element: <ProductListPage /> },
+                  { path: '/estoque/:id', element: <ProductDetailPage /> },
+                ],
+              },
+              {
+                element: <RequirePermission anyOf={['suppliers.write', 'inventory.write']} />,
+                children: [{ path: '/fornecedores', element: <SuppliersPage /> }],
               },
               {
                 element: <RequirePermission anyOf={['audit.read']} />,

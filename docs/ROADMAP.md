@@ -43,9 +43,24 @@ Ordem sugerida, cada item com migração + testes SQL + telas + testes:
 5. Orçamentos (itens, versões, aprovação/recusa registrada, imutabilidade após aprovação).
 6. PDFs (orçamento, relatório técnico, termos) e anexos em Storage privado.
 
-## Fase 3 — Gestão
-Catálogo de serviços, estoque transacional, fornecedores e compras, financeiro
-(centavos, parciais, estornos por lançamento inverso), garantias, agenda.
+## Fase 3 — Gestão (em andamento)
+
+### Entregue: catálogo, estoque, fornecedores, compras e itens da OS
+- Catálogo de serviços com preço, custo de referência, duração, garantia e condições (sem preços fixos no código;
+  serviços sugeridos nascem sem preço).
+- Produtos/peças com SKU único, estoque mínimo e alerta de reposição no painel, controle opcional de número de série.
+- Saldo só muda por movimentação registrada (compra, ajuste com motivo, devolução ao fornecedor, uso/devolução em OS),
+  com trava de linha: testado com 8 conexões disputando o mesmo saldo.
+- Custo médio ponderado recalculado a cada compra recebida; compra recebida não é editada nem cancelada.
+- Na OS: serviços do catálogo ou avulsos e peças do estoque; peça lançada baixa o estoque na mesma transação;
+  remover devolve ao estoque e mantém o registro. Custo real separado do preço cobrado; margem visível só para
+  financeiro e quem gerencia estoque.
+
+### Próximos incrementos
+1. Financeiro: contas a receber/pagar, pagamentos parciais e parcelas, estornos por lançamento inverso,
+   categorias, fluxo de caixa, margem por OS e por categoria de serviço.
+2. Garantias (por serviço/peça, a partir da entrega) e retorno em garantia.
+3. Agenda de atendimentos com conversão em OS.
 
 ## Fase 4 — Expansão
 Contratos recorrentes, sites e serviços digitais, relatórios com fórmulas

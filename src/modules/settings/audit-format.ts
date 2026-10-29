@@ -9,6 +9,11 @@ export const entityLabels: Record<string, string> = {
   client_sensitive: 'Dados restritos de cliente',
   equipment: 'Equipamento',
   service_orders: 'Ordem de serviço',
+  service_catalog: 'Serviço do catálogo',
+  suppliers: 'Fornecedor',
+  products: 'Produto',
+  purchases: 'Compra',
+  service_order_items: 'Item de OS',
 }
 
 export const actionLabels: Record<string, string> = {
@@ -73,6 +78,16 @@ const fieldLabels: Record<string, string> = {
   closed_at: 'encerrada em',
   intake_terms: 'termo de entrada',
   delivery_terms: 'termo de entrega',
+  price_cents: 'preço (centavos)',
+  cost_cents: 'custo (centavos)',
+  min_qty: 'estoque mínimo',
+  qty_on_hand: 'saldo',
+  sku: 'SKU',
+  active: 'ativo',
+  returned_at: 'removido em',
+  returned_reason: 'motivo da remoção',
+  received_at: 'recebida em',
+  invoice_number: 'nota fiscal',
 }
 
 function show(value: Json | undefined): string {

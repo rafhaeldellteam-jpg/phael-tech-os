@@ -18,6 +18,7 @@ import { requireSupabase } from '@/lib/supabase'
 import { equipmentTitle, useEquipmentTypes } from '../equipment/queries'
 import { useCompanyDetails } from '../settings/queries'
 import { isOverdue, modeLabels, nextStatuses, priorityLabels, stageTone, type NextStatus } from './meta'
+import { OrderItems } from './OrderItems'
 import { OrderReceipt } from './OrderReceipt'
 import { orderKeys, useAssignable, useOrder, useOrderEvents, useWorkflow } from './queries'
 
@@ -210,13 +211,15 @@ export function OrderDetailPage() {
             </dl>
           </section>
 
-          <section className="surface grid gap-3 rounded-lg p-5" aria-labelledby="diag-h">
+          <OrderItems companyId={company.id} orderId={o.id} editable={!finished} />
+
+          <section className="surface grid gap-2 rounded-lg p-5" aria-labelledby="diag-h">
             <h2 id="diag-h" className="font-semibold">
               Diagnóstico e orçamento
             </h2>
             <p className="text-sm text-muted">
-              Checklists de diagnóstico, serviços, peças e orçamento com aprovação chegam no próximo incremento. Por enquanto,
-              registre o andamento como observação na linha do tempo.
+              Checklists de diagnóstico e orçamento com aprovação do cliente chegam em um próximo incremento. Por enquanto,
+              lance serviços e peças acima e registre o diagnóstico como observação na linha do tempo.
             </p>
           </section>
         </div>

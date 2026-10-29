@@ -56,3 +56,8 @@ $$;
 
 grant execute on function auth.uid() to anon, authenticated, service_role;
 grant execute on function auth.jwt() to anon, authenticated, service_role;
+
+-- No Supabase o esquema "extensions" já existe e é acessível a anon/authenticated
+-- (funções de extensões como unaccent rodam como o usuário da requisição).
+create schema if not exists extensions;
+grant usage on schema extensions to anon, authenticated, service_role;

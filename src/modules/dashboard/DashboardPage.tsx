@@ -10,6 +10,7 @@ import { CURRENT_PHASE } from '@/core/permissions/navigation'
 import { roleLabels } from '@/core/permissions/permissions'
 import { requireSupabase } from '@/lib/supabase'
 import { actionLabels, entityLabels } from '../settings/audit-format'
+import { useLowStockCount } from '../inventory/queries'
 import { useOrderStats } from '../orders/queries'
 import { useCompanyDetails, useMembers } from '../settings/queries'
 
@@ -100,6 +101,9 @@ export function DashboardPage() {
     },
   ]
 
+  const canInventory = can(['inventory.read'])
+  const lowStock = useLowStockCount(active.company.id, canInventory)
+
   const firstName = ((user?.user_metadata?.full_name as string | undefined) ?? '').split(' ')[0]
   const profileComplete = Boolean(details.data?.tax_id && (details.data.email || details.data.phone))
   const teamInvited = (members.data?.length ?? 0) > 1
@@ -110,6 +114,18 @@ export function DashboardPage() {
         title={firstName ? `Olá, ${firstName}` : 'Painel'}
         description={`${roleLabels[active.role]} em ${active.company.name}`}
       />
+
+      {canInventory && (lowStock.data ?? 0) > 0 && (
+        <Link
+          to="/estoque?repor=1"
+          className="flex items-center justify-between gap-3 rounded-lg border border-attn-500/50 bg-attn-100 px-4 py-3 text-sm hover:brightness-95 dark:bg-attn-600/15"
+        >
+          <span>
+            <strong className="tabular-nums">{lowStock.data}</strong> produto(s) no estoque mínimo ou abaixo.
+          </span>
+          <span className="font-medium underline underline-offset-4">Ver o que repor</span>
+        </Link>
+      )}
 
       {canOrders && (
         <section aria-labelledby="os-h" className="grid gap-3">
@@ -154,7 +170,7 @@ export function DashboardPage() {
             Primeiros passos
           </h2>
           <p className="text-sm text-muted">
-            Financeiro, estoque e garantias entram no painel com a Fase 3, sempre calculados a partir dos dados reais.
+            Financeiro e garantias entram no painel nos próximos incrementos da Fase 3, sempre calculados a partir dos dados reais.
           </p>
           {details.isPending ? (
             <Spinner label="Verificando configuração" />
