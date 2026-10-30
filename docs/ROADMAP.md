@@ -105,10 +105,16 @@ Ordem sugerida, cada item com migração + testes SQL + telas + testes:
   garantia), desempenho por técnico, itens mais vendidos com margem, clientes que mais faturaram,
   contas a receber por atraso e série de 12 meses. Fórmulas em `docs/REPORTS.md`.
 
+### Entregue: portal do cliente
+- Link por OS com token de 256 bits (só o SHA-256 fica no banco), validade de 7 a 180 dias, revogação e
+  contagem de acessos. Página pública `/acompanhar/<token>` com etapas, itens e total, garantia,
+  histórico de status e botão de WhatsApp; aprovação ou recusa do orçamento quando a OS está em
+  "Aguardando aprovação". Não expõe custos, notas internas, senha do equipamento nem CPF/CNPJ.
+- Só `portal_order` e `portal_decide` são executáveis por visitantes sem login (teste de regressão).
+
 ### Próximos incrementos
-1. Portal do cliente (link com token, escopo e validade) para acompanhar OS e aprovar orçamento.
-2. Automações idempotentes (geração mensal de cobranças, lembretes de vencimento).
-3. Integração com o Phael Tech Provision e camada opcional de IA.
+1. Automações idempotentes (geração mensal de cobranças, lembretes de vencimento).
+2. Integração com o Phael Tech Provision e camada opcional de IA.
 
 ## Fase 5 — Preparação comercial
 Onboarding de outras assistências, planos e limites, cobrança por assinatura,

@@ -722,6 +722,22 @@ export interface Database {
         Update: never
         Relationships: []
       }
+      portal_links: {
+        Row: {
+          id: string
+          company_id: string
+          order_id: string
+          expires_at: Timestamp
+          revoked_at: Timestamp | null
+          created_by: string | null
+          created_at: Timestamp
+          last_viewed_at: Timestamp | null
+          view_count: number
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
       order_signatures: {
         Row: {
           id: string
@@ -1085,6 +1101,10 @@ export interface Database {
         Args: { p_company_id: string; p_months?: number }
         Returns: { month: string; opened: number; delivered: number; billed_cents: number | null; received_cents: number | null; paid_cents: number | null }[]
       }
+      create_portal_link: { Args: { p_order_id: string; p_days?: number }; Returns: { link_id: string; token: string; expires_at: Timestamp }[] }
+      revoke_portal_link: { Args: { p_link_id: string }; Returns: undefined }
+      portal_order: { Args: { p_token: string }; Returns: Json }
+      portal_decide: { Args: { p_token: string; p_approve: boolean; p_name: string; p_note?: string | null }; Returns: undefined }
       sign_order: {
         Args: { p_order_id: string; p_document: SignatureDocument; p_role: SignatureRole; p_signer_name: string; p_image_data: string }
         Returns: string

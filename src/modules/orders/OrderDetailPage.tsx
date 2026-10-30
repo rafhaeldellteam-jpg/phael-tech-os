@@ -24,6 +24,7 @@ import { useOrderWarranties } from '../warranties/queries'
 import { OrderItems } from './OrderItems'
 import { downloadOrderPdf } from './orderPdfDownload'
 import { OrderSignatures } from './OrderSignatures'
+import { OrderShare } from '../portal/OrderShare'
 import { orderKeys, useAssignable, useOrder, useOrderEvents, useWorkflow } from './queries'
 
 function Item({ label, children }: { label: string; children: ReactNode }) {
@@ -235,6 +236,14 @@ export function OrderDetailPage() {
           <OrderItems companyId={company.id} orderId={o.id} editable={!finished} />
           <OrderBilling companyId={company.id} orderId={o.id} orderNumber={o.number} />
           <OrderWarranty companyId={company.id} order={o} canCreate={can(['orders.create'])} canDecide={can(['orders.update'])} />
+          <OrderShare
+            companyId={company.id}
+            orderId={o.id}
+            orderNumber={o.number}
+            clientName={o.client.name}
+            clientPhone={o.client.whatsapp ?? o.client.phone}
+            canShare={can(['orders.update', 'orders.create', 'orders.deliver'])}
+          />
           <OrderSignatures
             companyId={company.id}
             orderId={o.id}

@@ -67,3 +67,11 @@ Pendências de processo para o controlador (Phael Tech Support):
 ## Pagamentos
 - O sistema nunca armazenará dados de cartão. Cobranças eletrônicas futuras
   usarão provedores especializados (tokenização no provedor).
+
+## Portal do cliente
+- Acesso sem login autorizado só por token aleatório de 32 bytes (base64url) entregue uma vez; o banco
+  guarda `sha256(token)` e a coluna não é legível pela equipe.
+- Links expiram (máx. 180 dias) e podem ser revogados; cada acesso atualiza `view_count`/`last_viewed_at`.
+- Funções anônimas: `portal_order` (leitura de uma OS, campos selecionados) e `portal_decide`
+  (aprovar/recusar orçamento, só em `awaiting_approval`, com nome do cliente na linha do tempo).
+

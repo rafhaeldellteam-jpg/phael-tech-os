@@ -68,14 +68,15 @@ select tests.throws('select * from public.profiles', '42501', 'anon não lê per
 select tests.throws($q$select public.create_company('X')$q$, '42501', 'anon não executa create_company');
 reset role;
 
--- Regressão: nenhuma função dos esquemas public/private pode ser executável por anon.
+-- Regressão: só as duas funções do portal do cliente (que exigem token) são executáveis por anon.
 select tests.ok(
   not exists (
     select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
     where n.nspname in ('public', 'private')
       and has_function_privilege('anon', p.oid, 'execute')
+      and not (n.nspname = 'public' and p.proname in ('portal_order', 'portal_decide'))
   ),
-  'nenhuma função de public/private é executável por anon');
+  'nenhuma função de public/private é executável por anon (exceto o portal com token)');
 
 -- Regressão: todas as tabelas de public têm RLS habilitado.
 select tests.ok(

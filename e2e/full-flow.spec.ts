@@ -81,6 +81,20 @@ test('cadastro, criação de empresa, convite e auditoria', async ({ page }, tes
   expect(bytes.subarray(0, 8).toString('latin1')).toBe('%PDF-1.4')
   expect(bytes.toString('latin1')).toContain('/DCTDecode')
 
+  // Portal do cliente: link sem login, só dados não sensíveis.
+  await page.getByRole('button', { name: 'Gerar link' }).click()
+  const portalUrl = await page.getByRole('textbox', { name: 'Link de acompanhamento' }).inputValue()
+  expect(portalUrl).toMatch(/\/acompanhar\/[A-Za-z0-9_-]{43}$/)
+  const visitor = await page.context().browser()!.newContext()
+  const portal = await visitor.newPage()
+  await portal.goto(portalUrl)
+  await expect(portal.getByRole('heading', { name: /OS-0001/ })).toBeVisible()
+  await expect(portal.getByText('Olá, Maria.')).toBeVisible()
+  await expect(portal.getByText('529.982.247-25')).toHaveCount(0)
+  await portal.goto(portalUrl.replace(/[A-Za-z0-9_-]{43}$/, 'x'.repeat(43)))
+  await expect(portal.getByText('Link inválido ou expirado')).toBeVisible()
+  await visitor.close()
+
   // Assinatura eletrônica do cliente no comprovante de entrada.
   await page.getByRole('button', { name: 'Colher assinatura do cliente' }).click()
   const signatureBox = page.getByRole('img', { name: /área para desenhar a assinatura/ })

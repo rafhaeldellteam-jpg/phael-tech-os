@@ -31,6 +31,7 @@ import { CompanySettingsPage } from '@/modules/settings/CompanySettingsPage'
 import { MembersPage } from '@/modules/settings/MembersPage'
 import { ContractsPage } from '@/modules/digital/ContractsPage'
 import { DigitalPage } from '@/modules/digital/DigitalPage'
+import { PortalPage } from '@/modules/portal/PortalPage'
 import { ReportsPage } from '@/modules/reports/ReportsPage'
 import { SchedulePage } from '@/modules/schedule/SchedulePage'
 import { WarrantiesPage } from '@/modules/warranties/WarrantiesPage'
@@ -52,6 +53,8 @@ export const router = createBrowserRouter([
   },
   // Fora dos guardas: o link de recuperação cria uma sessão temporária.
   { path: '/redefinir-senha', element: <ResetPasswordPage /> },
+  // Portal do cliente: público, autorizado só pelo token do link.
+  { path: '/acompanhar/:token', element: <PortalPage /> },
   {
     element: <RequireAuth />,
     children: [
