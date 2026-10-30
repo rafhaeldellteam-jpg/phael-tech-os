@@ -100,11 +100,15 @@ Ordem sugerida, cada item com migração + testes SQL + telas + testes:
   com data e hora; imutável, com SHA-256 da imagem e registro na linha do tempo. Cada membro pode salvar
   a própria assinatura para reutilizar. É assinatura eletrônica simples (Lei 14.063/2020), não ICP-Brasil.
 
+### Entregue: relatórios
+- OS do período (abertas, entregues, em andamento, tempo médio e mediana de reparo, no prazo, retornos em
+  garantia), desempenho por técnico, itens mais vendidos com margem, clientes que mais faturaram,
+  contas a receber por atraso e série de 12 meses. Fórmulas em `docs/REPORTS.md`.
+
 ### Próximos incrementos
-1. Relatórios com fórmulas documentadas (operacional e financeiro).
-2. Portal do cliente (link com token, escopo e validade) para acompanhar OS e aprovar orçamento.
-3. Automações idempotentes (geração mensal de cobranças, lembretes de vencimento).
-4. Integração com o Phael Tech Provision e camada opcional de IA.
+1. Portal do cliente (link com token, escopo e validade) para acompanhar OS e aprovar orçamento.
+2. Automações idempotentes (geração mensal de cobranças, lembretes de vencimento).
+3. Integração com o Phael Tech Provision e camada opcional de IA.
 
 ## Fase 5 — Preparação comercial
 Onboarding de outras assistências, planos e limites, cobrança por assinatura,

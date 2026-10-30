@@ -1053,6 +1053,38 @@ export interface Database {
       }
       open_warranty_claim: { Args: { p_order_id: string; p_data: Json }; Returns: { claim_id: string; return_order_id: string }[] }
       decide_warranty_claim: { Args: { p_claim_id: string; p_status: WarrantyClaimStatus; p_note?: string | null }; Returns: undefined }
+      report_orders_summary: {
+        Args: { p_company_id: string; p_from: string; p_to: string }
+        Returns: {
+          opened: number
+          delivered: number
+          canceled: number
+          unrepairable: number
+          open_now: number
+          avg_turnaround_hours: number | null
+          median_turnaround_hours: number | null
+          due_tracked: number
+          on_time: number
+          warranty_returns: number
+        }[]
+      }
+      report_by_technician: {
+        Args: { p_company_id: string; p_from: string; p_to: string }
+        Returns: { user_id: string | null; name: string; delivered: number; avg_turnaround_hours: number | null; revenue_cents: number | null; warranty_returns: number }[]
+      }
+      report_top_items: {
+        Args: { p_company_id: string; p_from: string; p_to: string; p_limit?: number }
+        Returns: { kind: OrderItemKind; description: string; qty: number; orders: number; revenue_cents: number; cost_cents: number | null }[]
+      }
+      report_top_clients: {
+        Args: { p_company_id: string; p_from: string; p_to: string; p_limit?: number }
+        Returns: { client_id: string; name: string; entries: number; billed_cents: number; received_cents: number; open_cents: number }[]
+      }
+      report_receivables_aging: { Args: { p_company_id: string }; Returns: { bucket: string; sort: number; entries: number; open_cents: number }[] }
+      report_monthly: {
+        Args: { p_company_id: string; p_months?: number }
+        Returns: { month: string; opened: number; delivered: number; billed_cents: number | null; received_cents: number | null; paid_cents: number | null }[]
+      }
       sign_order: {
         Args: { p_order_id: string; p_document: SignatureDocument; p_role: SignatureRole; p_signer_name: string; p_image_data: string }
         Returns: string

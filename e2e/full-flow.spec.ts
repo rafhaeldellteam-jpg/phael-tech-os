@@ -237,5 +237,8 @@ test('cadastro, criação de empresa, convite e auditoria', async ({ page }, tes
 
   // Financeiro abre com dados reais; módulo futuro aparece como indisponível.
   await page.goto('/relatorios')
+  await expect(page.getByRole('heading', { name: 'Relatórios' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Contas a receber por atraso' })).toBeVisible()
+  await page.goto('/conhecimento')
   await expect(page.getByText('Módulo ainda não disponível')).toBeVisible()
 })

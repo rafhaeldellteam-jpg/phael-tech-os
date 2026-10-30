@@ -65,7 +65,7 @@ export const navigation: NavSection[] = [
       { path: '/garantias', label: 'Garantias', icon: ShieldCheck, requires: ['orders.read_all', 'orders.read_assigned'], phase: 3, ready: true },
       { path: '/sites', label: 'Sites e serviços digitais', icon: Globe, requires: ['clients.read'], phase: 4, ready: true },
       { path: '/contratos', label: 'Contratos recorrentes', icon: Repeat, requires: ['finance.read'], phase: 4, ready: true },
-      { path: '/relatorios', label: 'Relatórios', icon: BarChart3, requires: ['reports.operational', 'reports.financial'], phase: 4 },
+      { path: '/relatorios', label: 'Relatórios', icon: BarChart3, requires: ['reports.operational', 'reports.financial'], phase: 4, ready: true },
       { path: '/conhecimento', label: 'Base de conhecimento', icon: BookOpen, requires: ['knowledge.read'], phase: 4 },
     ],
   },

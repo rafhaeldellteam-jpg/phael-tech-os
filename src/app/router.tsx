@@ -31,6 +31,7 @@ import { CompanySettingsPage } from '@/modules/settings/CompanySettingsPage'
 import { MembersPage } from '@/modules/settings/MembersPage'
 import { ContractsPage } from '@/modules/digital/ContractsPage'
 import { DigitalPage } from '@/modules/digital/DigitalPage'
+import { ReportsPage } from '@/modules/reports/ReportsPage'
 import { SchedulePage } from '@/modules/schedule/SchedulePage'
 import { WarrantiesPage } from '@/modules/warranties/WarrantiesPage'
 import { ModuleUnavailablePage } from '@/modules/unavailable/ModuleUnavailablePage'
@@ -132,6 +133,10 @@ export const router = createBrowserRouter([
               {
                 element: <RequirePermission anyOf={['finance.read']} />,
                 children: [{ path: '/financeiro', element: <FinancePage /> }],
+              },
+              {
+                element: <RequirePermission anyOf={['reports.operational', 'reports.financial']} />,
+                children: [{ path: '/relatorios', element: <ReportsPage /> }],
               },
               {
                 element: <RequirePermission anyOf={['clients.read']} />,
