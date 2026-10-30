@@ -83,8 +83,8 @@ test('cadastro, criação de empresa, convite e auditoria', async ({ page }, tes
 
   // Assinatura eletrônica do cliente no comprovante de entrada.
   await page.getByRole('button', { name: 'Colher assinatura do cliente' }).click()
-  const pad = page.getByRole('img', { name: /área para desenhar a assinatura/ })
-  const box = await pad.boundingBox()
+  const signatureBox = page.getByRole('img', { name: /área para desenhar a assinatura/ })
+  const box = await signatureBox.boundingBox()
   if (!box) throw new Error('quadro de assinatura não encontrado')
   await page.mouse.move(box.x + 30, box.y + box.height / 2)
   await page.mouse.down()
