@@ -58,7 +58,7 @@ export function textWidth(text: string, size: number, font: PdfFont = 'regular')
 export function wrapText(text: string, maxWidth: number, size: number, font: PdfFont = 'regular'): string[] {
   const lines: string[] = []
   for (const paragraph of text.replace(/\r\n?/g, '\n').split('\n')) {
-    const words = paragraph.split(/ +/).filter((w, i, arr) => w !== '' || arr.length === 1)
+    const words = paragraph.split(/ +/).filter((w, _i, arr) => w !== '' || arr.length === 1)
     let line = ''
     for (const word of words) {
       const candidate = line ? `${line} ${word}` : word
