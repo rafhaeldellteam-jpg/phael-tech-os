@@ -1,7 +1,7 @@
 import * as Dialog from '@radix-ui/react-dialog'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowRightLeft, Pencil, Printer, UserRound, X } from 'lucide-react'
-import { useEffect, useState, type ReactNode } from 'react'
+import { ArrowRightLeft, FileDown, Pencil, UserRound, X } from 'lucide-react'
+import { useState, type ReactNode } from 'react'
 import { Link, useLocation, useParams } from 'react-router'
 import { Alert } from '@/components/ui/Alert'
 import { Badge } from '@/components/ui/Badge'
@@ -22,7 +22,7 @@ import { OrderBilling } from '../finance/OrderBilling'
 import { OrderWarranty } from '../warranties/OrderWarranty'
 import { useOrderWarranties } from '../warranties/queries'
 import { OrderItems } from './OrderItems'
-import { OrderReceipt } from './OrderReceipt'
+import { downloadOrderPdf } from './orderPdfDownload'
 import { orderKeys, useAssignable, useOrder, useOrderEvents, useWorkflow } from './queries'
 
 function Item({ label, children }: { label: string; children: ReactNode }) {
@@ -50,7 +50,8 @@ export function OrderDetailPage() {
   const delivered = Boolean(order.data?.delivered_at) && !order.data?.warranty_of
   const warranties = useOrderWarranties(company.id, id, delivered)
   const [statusOpen, setStatusOpen] = useState(false)
-  const [printKind, setPrintKind] = useState<'intake' | 'delivery' | null>(null)
+  const [pdfKind, setPdfKind] = useState<'intake' | 'delivery' | null>(null)
+  const [pdfError, setPdfError] = useState<unknown>(null)
   const [note, setNote] = useState('')
 
   const invalidate = async () => {
@@ -75,16 +76,6 @@ export function OrderDetailPage() {
       await invalidate()
     },
   })
-
-  // Imprime depois que o comprovante escolhido foi renderizado.
-  useEffect(() => {
-    if (!printKind) return
-    const t = setTimeout(() => {
-      window.print()
-      setPrintKind(null)
-    }, 50)
-    return () => clearTimeout(t)
-  }, [printKind])
 
   if (order.isPending || workflow.isPending) return <Spinner label="Carregando OS" />
   if (order.isError) return <ErrorState error={order.error} onRetry={order.refetch} />
@@ -118,6 +109,27 @@ export function OrderDetailPage() {
   }
   const canReassign = can(['orders.update']) && can(['orders.read_all'])
   const canTakeOver = can(['orders.update']) && !o.assigned_to
+  const makePdf = async (kind: 'intake' | 'delivery') => {
+    if (!companyDetails.data) return
+    setPdfKind(kind)
+    setPdfError(null)
+    try {
+      await downloadOrderPdf({
+        kind,
+        company: companyDetails.data,
+        order: o,
+        statusLabel: status?.label ?? o.status,
+        client: o.client,
+        equipmentTitle: equipmentName,
+        serial: o.equipment?.serial_number ?? null,
+        warranties: warranties.data ?? [],
+      })
+    } catch (e) {
+      setPdfError(e)
+    } finally {
+      setPdfKind(null)
+    }
+  }
   const saved = (location.state as { saved?: 'created' | 'updated' | 'warranty' } | null)?.saved
 
   return (
@@ -147,12 +159,12 @@ export function OrderDetailPage() {
                 <ArrowRightLeft className="size-4" aria-hidden /> Mudar status
               </Button>
             )}
-            <Button variant="secondary" onClick={() => setPrintKind('intake')}>
-              <Printer className="size-4" aria-hidden /> Comprovante de entrada
+            <Button variant="secondary" loading={pdfKind === 'intake'} disabled={!companyDetails.data} onClick={() => void makePdf('intake')}>
+              <FileDown className="size-4" aria-hidden /> PDF de entrada
             </Button>
             {o.delivered_at && (
-              <Button variant="secondary" onClick={() => setPrintKind('delivery')}>
-                <Printer className="size-4" aria-hidden /> Comprovante de entrega
+              <Button variant="secondary" loading={pdfKind === 'delivery'} disabled={!companyDetails.data} onClick={() => void makePdf('delivery')}>
+                <FileDown className="size-4" aria-hidden /> PDF de entrega
               </Button>
             )}
             {can(['orders.update']) && !finished && (
@@ -164,9 +176,10 @@ export function OrderDetailPage() {
         }
       />
 
-      {saved === 'created' && <Alert tone="success">OS aberta. Imprima o comprovante de entrada para o cliente assinar.</Alert>}
+      {saved === 'created' && <Alert tone="success">OS aberta. Baixe o PDF de entrada para o cliente assinar.</Alert>}
       {saved === 'updated' && <Alert tone="success">OS atualizada.</Alert>}
       {saved === 'warranty' && <Alert tone="success">OS de retorno em garantia aberta. Aceite ou negue a garantia depois de avaliar o equipamento.</Alert>}
+      {pdfError != null && <Alert tone="error">Não foi possível gerar o PDF: {toUserMessage(pdfError)}</Alert>}
       {assign.isError && <Alert tone="error">{toUserMessage(assign.error)}</Alert>}
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
@@ -339,20 +352,6 @@ export function OrderDetailPage() {
         />
       )}
 
-      {printKind && companyDetails.data && (
-        <OrderReceipt
-          data={{
-            kind: printKind,
-            company: companyDetails.data,
-            terms: printKind === 'intake' ? companyDetails.data.intake_terms : companyDetails.data.delivery_terms,
-            order: { ...o, statusLabel: status?.label ?? o.status },
-            client: o.client,
-            equipment: equipmentName,
-            serial: o.equipment?.serial_number ?? null,
-            warranties: warranties.data,
-          }}
-        />
-      )}
     </div>
   )
 }

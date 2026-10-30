@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { expect, test } from '@playwright/test'
 
 // Fluxo completo contra um Supabase local real (supabase start).
@@ -72,6 +73,13 @@ test('cadastro, criação de empresa, convite e auditoria', async ({ page }, tes
   await page.getByRole('button', { name: 'Abrir OS' }).click()
   await expect(page.getByText('OS aberta.')).toBeVisible()
   await expect(page.getByRole('heading', { name: /OS-0001/ })).toBeVisible()
+  const pdf = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'PDF de entrada' }).click()
+  const file = await pdf
+  expect(file.suggestedFilename()).toBe('OS-0001-entrada.pdf')
+  const bytes = readFileSync(await file.path())
+  expect(bytes.subarray(0, 8).toString('latin1')).toBe('%PDF-1.4')
+  expect(bytes.toString('latin1')).toContain('/DCTDecode')
   await page.getByRole('button', { name: 'Mudar status' }).click()
   await page.getByRole('radio', { name: 'Cancelado' }).check()
   await expect(page.getByRole('button', { name: 'Confirmar mudança' })).toBeDisabled()
