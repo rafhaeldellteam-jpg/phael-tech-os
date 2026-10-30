@@ -18,6 +18,7 @@ export type PermissionKey =
   | 'orders.create'
   | 'orders.update'
   | 'orders.deliver'
+  | 'digital.write'
   | 'diagnostics.write'
   | 'quotes.read'
   | 'quotes.write'
