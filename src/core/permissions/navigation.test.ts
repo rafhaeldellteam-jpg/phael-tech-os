@@ -31,7 +31,7 @@ describe('visibleNavigation', () => {
 describe('fases', () => {
   it('módulos prontos', () => {
     const available = navigation.flatMap((s) => s.items).filter(isAvailable).map((i) => i.path)
-    expect(available.sort()).toEqual(['/', '/agenda', '/auditoria', '/clientes', '/empresa', '/equipamentos', '/equipe', '/contratos', '/estoque', '/financeiro', '/fornecedores', '/garantias', '/ordens', '/servicos', '/sites'])
+    expect(available.sort()).toEqual(['/', '/agenda', '/auditoria', '/clientes', '/contratos', '/empresa', '/equipamentos', '/equipe', '/estoque', '/financeiro', '/fornecedores', '/garantias', '/ordens', '/servicos', '/sites'])
   })
   it('caminhos são únicos', () => {
     const all = navigation.flatMap((s) => s.items.map((i) => i.path))
