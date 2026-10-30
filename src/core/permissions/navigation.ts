@@ -8,17 +8,18 @@ import {
   ClipboardList,
   FileSignature,
   Globe,
-  LayoutDashboard,
   Laptop,
+  LayoutDashboard,
+  Repeat,
   ScrollText,
   ShieldCheck,
   Stethoscope,
   Tags,
   Truck,
+  type LucideIcon,
   Users,
   UsersRound,
   Wallet,
-  type LucideIcon,
 } from 'lucide-react'
 import { canAny, type AccessRequirement } from './permissions'
 
@@ -39,7 +40,7 @@ export interface NavSection {
 }
 
 /** Fase em andamento (usada no painel). */
-export const CURRENT_PHASE = 2
+export const CURRENT_PHASE = 4
 
 export const navigation: NavSection[] = [
   {
@@ -62,7 +63,8 @@ export const navigation: NavSection[] = [
       { path: '/fornecedores', label: 'Fornecedores e compras', icon: Truck, requires: ['suppliers.write', 'inventory.write'], phase: 3, ready: true },
       { path: '/financeiro', label: 'Financeiro', icon: Wallet, requires: ['finance.read'], phase: 3, ready: true },
       { path: '/garantias', label: 'Garantias', icon: ShieldCheck, requires: ['orders.read_all', 'orders.read_assigned'], phase: 3, ready: true },
-      { path: '/sites', label: 'Sites e serviços digitais', icon: Globe, requires: ['clients.read'], phase: 4 },
+      { path: '/sites', label: 'Sites e serviços digitais', icon: Globe, requires: ['clients.read'], phase: 4, ready: true },
+      { path: '/contratos', label: 'Contratos recorrentes', icon: Repeat, requires: ['finance.read'], phase: 4, ready: true },
       { path: '/relatorios', label: 'Relatórios', icon: BarChart3, requires: ['reports.operational', 'reports.financial'], phase: 4 },
       { path: '/conhecimento', label: 'Base de conhecimento', icon: BookOpen, requires: ['knowledge.read'], phase: 4 },
     ],

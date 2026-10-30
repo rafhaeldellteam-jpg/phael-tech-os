@@ -17,12 +17,14 @@ import { useLowStockCount } from '../inventory/queries'
 import { useWarrantyStats } from '../warranties/queries'
 import { useAppointmentsToday } from '../schedule/queries'
 import { formatTime } from '../schedule/dates'
+import { useExpiringDomains } from '../digital/queries'
+import { formatIsoDate } from '../finance/period'
 import { useOrderStats } from '../orders/queries'
 import { useCompanyDetails, useMembers } from '../settings/queries'
 
 const phases = [
   { n: 1, name: 'Fundação', scope: 'Acesso, empresas, equipe, permissões e auditoria' },
-  { n: 2, name: 'Operação principal', scope: 'Clientes, equipamentos, ordens de serviço, diagnósticos e orçamentos' },
+  { n: 2, name: 'Operação principal', scope: 'Clientes, equipamentos e ordens de serviço (checklist de diagnóstico e orçamento com aprovação: pendentes)' },
   { n: 3, name: 'Gestão', scope: 'Catálogo, estoque, fornecedores, financeiro, garantias e agenda' },
   { n: 4, name: 'Expansão', scope: 'Contratos, sites, relatórios, portal do cliente, automações e IA' },
   { n: 5, name: 'Preparação comercial', scope: 'Planos, assinatura, onboarding de outras assistências' },
@@ -115,6 +117,7 @@ export function DashboardPage() {
   const warranty = useWarrantyStats(active.company.id, canOrders)
   const canSchedule = can(['schedule.read'])
   const agenda = useAppointmentsToday(active.company.id, canSchedule)
+  const domains = useExpiringDomains(active.company.id, 30, can(['clients.read']))
 
   const firstName = ((user?.user_metadata?.full_name as string | undefined) ?? '').split(' ')[0]
   const profileComplete = Boolean(details.data?.tax_id && (details.data.email || details.data.phone))
@@ -156,6 +159,23 @@ export function DashboardPage() {
             )}
           </span>
           <span className="font-medium underline underline-offset-4">Abrir agenda</span>
+        </Link>
+      )}
+
+      {(domains.data ?? []).length > 0 && (
+        <Link
+          to="/sites"
+          className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-attn-500/50 bg-attn-100 px-4 py-3 text-sm hover:brightness-95 dark:bg-attn-600/15"
+        >
+          <span>
+            Domínio(s) vencendo em até 30 dias:{' '}
+            {(domains.data ?? [])
+              .slice(0, 3)
+              .map((d) => `${d.name} (${d.client_name}, ${formatIsoDate(d.domain_expires_on)})`)
+              .join('; ')}
+            {(domains.data ?? []).length > 3 && ` e mais ${(domains.data ?? []).length - 3}`}
+          </span>
+          <span className="font-medium underline underline-offset-4">Ver sites</span>
         </Link>
       )}
 

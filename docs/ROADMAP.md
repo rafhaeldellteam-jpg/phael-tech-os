@@ -86,9 +86,22 @@ Ordem sugerida, cada item com migração + testes SQL + telas + testes:
 2. PDFs e anexos (fotos de entrada, laudos).
 
 ## Fase 4 — Expansão
-Contratos recorrentes, sites e serviços digitais, relatórios com fórmulas
-documentadas, portal do cliente (token com escopo e validade), automações
-idempotentes, camada opcional de IA, integração com o Phael Tech Provision.
+
+### Entregue: sites, serviços digitais e contratos recorrentes
+- Cadastro de sites, lojas, landing pages, hospedagens, domínios e e-mails por cliente, com repositório,
+  hospedagem, data no ar e vencimento do domínio (alerta no painel 30 dias antes).
+- Contratos mensais, bimestrais, trimestrais, semestrais ou anuais, com dia de vencimento (1 a 28), início,
+  fim opcional, categoria de receita e vínculo opcional ao serviço digital.
+- Geração de cobranças idempotente: cada vencimento de cada contrato vira no máximo uma conta a receber
+  (índice único `(contract_id, period_date)`); rodar de novo não duplica e cobrança cancelada não volta.
+  Reajuste vale para as próximas; calendário fica fixo depois da primeira cobrança.
+- PDF da OS (entrada e entrega) com o logo da Phael Tech Support no cabeçalho e no rodapé.
+
+### Próximos incrementos
+1. Relatórios com fórmulas documentadas (operacional e financeiro).
+2. Portal do cliente (link com token, escopo e validade) para acompanhar OS e aprovar orçamento.
+3. Automações idempotentes (geração mensal de cobranças, lembretes de vencimento).
+4. Integração com o Phael Tech Provision e camada opcional de IA.
 
 ## Fase 5 — Preparação comercial
 Onboarding de outras assistências, planos e limites, cobrança por assinatura,

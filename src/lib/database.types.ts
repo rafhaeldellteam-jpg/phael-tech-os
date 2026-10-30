@@ -28,6 +28,9 @@ export type FinanceAccountKind = 'cash' | 'bank' | 'digital'
 export type FinanceStatus = 'open' | 'partial' | 'paid' | 'canceled'
 export type WarrantyClaimStatus = 'open' | 'accepted' | 'denied' | 'resolved'
 export type AppointmentKind = 'onsite' | 'remote' | 'dropoff' | 'pickup' | 'other'
+export type DigitalKind = 'website' | 'ecommerce' | 'landing' | 'hosting' | 'domain' | 'email' | 'maintenance' | 'other'
+export type DigitalStatus = 'planning' | 'development' | 'active' | 'paused' | 'canceled'
+export type ContractStatus = 'active' | 'paused' | 'ended'
 export type AppointmentStatus = 'scheduled' | 'confirmed' | 'done' | 'no_show' | 'canceled'
 
 type Timestamp = string
@@ -616,6 +619,8 @@ export interface Database {
           supplier_id: string | null
           order_id: string | null
           purchase_id: string | null
+          contract_id: string | null
+          period_date: string | null
           amount_cents: number
           paid_cents: number
           issue_date: string
@@ -714,6 +719,77 @@ export interface Database {
         Insert: never
         Update: never
         Relationships: []
+      }
+      digital_services: {
+        Row: {
+          id: string
+          company_id: string
+          number: number
+          client_id: string
+          kind: DigitalKind
+          name: string
+          url: string | null
+          status: DigitalStatus
+          repository_url: string | null
+          hosting_provider: string | null
+          domain_expires_on: string | null
+          launched_on: string | null
+          notes: string | null
+          created_by: string | null
+          created_at: Timestamp
+          updated_at: Timestamp
+        }
+        Insert: never
+        Update: never
+        Relationships: [
+          {
+            foreignKeyName: 'digital_services_company_id_client_id_fkey'
+            columns: ['company_id', 'client_id']
+            isOneToOne: false
+            referencedRelation: 'clients'
+            referencedColumns: ['company_id', 'id']
+          },
+        ]
+      }
+      contracts: {
+        Row: {
+          id: string
+          company_id: string
+          number: number
+          client_id: string
+          digital_service_id: string | null
+          description: string
+          amount_cents: number
+          interval_months: number
+          billing_day: number
+          start_date: string
+          end_date: string | null
+          category_id: string | null
+          status: ContractStatus
+          status_reason: string | null
+          notes: string | null
+          created_by: string | null
+          created_at: Timestamp
+          updated_at: Timestamp
+        }
+        Insert: never
+        Update: never
+        Relationships: [
+          {
+            foreignKeyName: 'contracts_company_id_client_id_fkey'
+            columns: ['company_id', 'client_id']
+            isOneToOne: false
+            referencedRelation: 'clients'
+            referencedColumns: ['company_id', 'id']
+          },
+          {
+            foreignKeyName: 'contracts_company_id_digital_service_id_fkey'
+            columns: ['company_id', 'digital_service_id']
+            isOneToOne: false
+            referencedRelation: 'digital_services'
+            referencedColumns: ['company_id', 'id']
+          },
+        ]
       }
       appointments: {
         Row: {
@@ -946,6 +1022,15 @@ export interface Database {
       }
       open_warranty_claim: { Args: { p_order_id: string; p_data: Json }; Returns: { claim_id: string; return_order_id: string }[] }
       decide_warranty_claim: { Args: { p_claim_id: string; p_status: WarrantyClaimStatus; p_note?: string | null }; Returns: undefined }
+      save_digital_service: { Args: { p_company_id: string; p_id: string | null; p_data: Json }; Returns: string }
+      save_contract: { Args: { p_company_id: string; p_id: string | null; p_data: Json }; Returns: string }
+      set_contract_status: { Args: { p_id: string; p_status: ContractStatus; p_reason?: string | null }; Returns: undefined }
+      generate_contract_charges: { Args: { p_company_id: string; p_until?: string | null; p_contract_id?: string | null }; Returns: number }
+      contract_overview: {
+        Args: { p_company_id: string }
+        Returns: { contract_id: string; next_due: string | null; billed_count: number; open_cents: number; overdue_cents: number }[]
+      }
+      expiring_domains: { Args: { p_company_id: string; p_days?: number }; Returns: { id: string; name: string; client_name: string; domain_expires_on: string }[] }
       save_appointment: { Args: { p_company_id: string; p_id: string | null; p_data: Json }; Returns: string }
       set_appointment_status: { Args: { p_id: string; p_status: AppointmentStatus; p_reason?: string | null }; Returns: undefined }
       convert_appointment_to_order: { Args: { p_id: string; p_reported_problem?: string | null }; Returns: string }
@@ -1018,6 +1103,9 @@ export interface Database {
       order_item_kind: OrderItemKind
       warranty_claim_status: WarrantyClaimStatus
       appointment_kind: AppointmentKind
+      digital_kind: DigitalKind
+      digital_status: DigitalStatus
+      contract_status: ContractStatus
       appointment_status: AppointmentStatus
       finance_direction: FinanceDirection
       payment_method: PaymentMethod
