@@ -30,6 +30,8 @@ export type WarrantyClaimStatus = 'open' | 'accepted' | 'denied' | 'resolved'
 export type AppointmentKind = 'onsite' | 'remote' | 'dropoff' | 'pickup' | 'other'
 export type DigitalKind = 'website' | 'ecommerce' | 'landing' | 'hosting' | 'domain' | 'email' | 'maintenance' | 'other'
 export type DigitalStatus = 'planning' | 'development' | 'active' | 'paused' | 'canceled'
+export type SignatureDocument = 'intake' | 'delivery'
+export type SignatureRole = 'client' | 'company'
 export type ContractStatus = 'active' | 'paused' | 'ended'
 export type AppointmentStatus = 'scheduled' | 'confirmed' | 'done' | 'no_show' | 'canceled'
 
@@ -720,6 +722,35 @@ export interface Database {
         Update: never
         Relationships: []
       }
+      order_signatures: {
+        Row: {
+          id: string
+          company_id: string
+          order_id: string
+          document: SignatureDocument
+          signer_role: SignatureRole
+          signer_name: string
+          image_data: string
+          image_sha256: string
+          recorded_by: string | null
+          signed_at: Timestamp
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      member_signatures: {
+        Row: {
+          company_id: string
+          user_id: string
+          signer_name: string
+          image_data: string
+          updated_at: Timestamp
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
       digital_services: {
         Row: {
           id: string
@@ -1022,6 +1053,11 @@ export interface Database {
       }
       open_warranty_claim: { Args: { p_order_id: string; p_data: Json }; Returns: { claim_id: string; return_order_id: string }[] }
       decide_warranty_claim: { Args: { p_claim_id: string; p_status: WarrantyClaimStatus; p_note?: string | null }; Returns: undefined }
+      sign_order: {
+        Args: { p_order_id: string; p_document: SignatureDocument; p_role: SignatureRole; p_signer_name: string; p_image_data: string }
+        Returns: string
+      }
+      save_my_signature: { Args: { p_company_id: string; p_signer_name: string; p_image_data: string }; Returns: undefined }
       save_digital_service: { Args: { p_company_id: string; p_id: string | null; p_data: Json }; Returns: string }
       save_contract: { Args: { p_company_id: string; p_id: string | null; p_data: Json }; Returns: string }
       set_contract_status: { Args: { p_id: string; p_status: ContractStatus; p_reason?: string | null }; Returns: undefined }
@@ -1104,6 +1140,8 @@ export interface Database {
       warranty_claim_status: WarrantyClaimStatus
       appointment_kind: AppointmentKind
       digital_kind: DigitalKind
+      signature_document: SignatureDocument
+      signature_role: SignatureRole
       digital_status: DigitalStatus
       contract_status: ContractStatus
       appointment_status: AppointmentStatus

@@ -96,6 +96,9 @@ Ordem sugerida, cada item com migração + testes SQL + telas + testes:
   (índice único `(contract_id, period_date)`); rodar de novo não duplica e cobrança cancelada não volta.
   Reajuste vale para as próximas; calendário fica fixo depois da primeira cobrança.
 - PDF da OS (entrada e entrega) com o logo da Phael Tech Support no cabeçalho e no rodapé.
+- Assinatura eletrônica (desenho na tela) do cliente e da empresa em cada comprovante, impressa no PDF
+  com data e hora; imutável, com SHA-256 da imagem e registro na linha do tempo. Cada membro pode salvar
+  a própria assinatura para reutilizar. É assinatura eletrônica simples (Lei 14.063/2020), não ICP-Brasil.
 
 ### Próximos incrementos
 1. Relatórios com fórmulas documentadas (operacional e financeiro).

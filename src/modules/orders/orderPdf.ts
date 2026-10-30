@@ -23,6 +23,14 @@ export interface OrderPdfData {
   warranties: { description: string; days: number; until: string }[]
   terms: string | null
   generatedAt: string
+  /** Assinaturas eletrônicas já colhidas para este documento. */
+  signatures?: { client?: SignedImage; company?: SignedImage }
+}
+
+export interface SignedImage {
+  image: PdfJpeg
+  name: string
+  signedAt: string
 }
 
 export interface OrderPdfLogos {
@@ -118,9 +126,8 @@ export function buildOrderPdf(data: OrderPdfData, logos: OrderPdfLogos): Uint8Ar
 
   drawHeader()
 
-  // Empresa
-  const companyName = data.company.legal_name ?? data.company.name
-  doc.text(M, y, companyName, { size: 11, font: 'bold' })
+  // Empresa (nome fantasia; a razão social não aparece no comprovante)
+  doc.text(M, y, data.company.name, { size: 11, font: 'bold' })
   y += 15
   const companyLine = [data.company.taxIdLabel, data.company.contact].filter(Boolean).join('   ·   ')
   if (companyLine) {
@@ -206,16 +213,30 @@ export function buildOrderPdf(data: OrderPdfData, logos: OrderPdfLogos): Uint8Ar
     paragraph(data.terms, { size: 8.5, color: MUTED })
   }
 
-  // Assinaturas
-  ensure(80)
-  y = Math.max(y + 46, Math.min(bottomLimit - 34, y + 46))
+  // Assinaturas (desenhadas acima da linha quando já colhidas)
+  const SIG_H = 46
+  ensure(SIG_H + 70)
+  y += SIG_H + 18
   const sigW = (contentW - 40) / 2
-  doc.line(M, y, M + sigW, y, { color: INK, width: 0.6 })
-  doc.line(W - M - sigW, y, W - M, y, { color: INK, width: 0.6 })
-  doc.text(M + sigW / 2, y + 5, data.client.name, { size: 8.5, align: 'center' })
-  doc.text(M + sigW / 2, y + 16, 'Cliente', { size: 7.5, color: MUTED, align: 'center' })
-  doc.text(W - M - sigW / 2, y + 5, data.company.name, { size: 8.5, align: 'center' })
-  doc.text(W - M - sigW / 2, y + 16, 'Responsável técnico', { size: 7.5, color: MUTED, align: 'center' })
+  const slots: { x: number; sig: SignedImage | undefined; name: string; role: string }[] = [
+    { x: M, sig: data.signatures?.client, name: data.client.name, role: 'Cliente' },
+    { x: W - M - sigW, sig: data.signatures?.company, name: data.company.name, role: 'Responsável técnico' },
+  ]
+  for (const s of slots) {
+    if (s.sig) {
+      const ratio = s.sig.image.width / s.sig.image.height
+      const h = Math.min(SIG_H, (sigW - 20) / ratio)
+      const w = h * ratio
+      doc.image(doc.addImage(s.sig.image), s.x + (sigW - w) / 2, y - h - 2, w, h)
+    }
+    doc.line(s.x, y, s.x + sigW, y, { color: INK, width: 0.6 })
+    doc.text(s.x + sigW / 2, y + 5, s.sig?.name ?? s.name, { size: 8.5, align: 'center' })
+    doc.text(s.x + sigW / 2, y + 16, s.role, { size: 7.5, color: MUTED, align: 'center' })
+    if (s.sig) {
+      doc.text(s.x + sigW / 2, y + 26, `Assinado eletronicamente em ${s.sig.signedAt}`, { size: 6.5, color: MUTED, align: 'center' })
+    }
+  }
+  y += 34
 
   // Rodapé com o logo em todas as páginas.
   const total = doc.pageCount

@@ -23,6 +23,7 @@ import { OrderWarranty } from '../warranties/OrderWarranty'
 import { useOrderWarranties } from '../warranties/queries'
 import { OrderItems } from './OrderItems'
 import { downloadOrderPdf } from './orderPdfDownload'
+import { OrderSignatures } from './OrderSignatures'
 import { orderKeys, useAssignable, useOrder, useOrderEvents, useWorkflow } from './queries'
 
 function Item({ label, children }: { label: string; children: ReactNode }) {
@@ -234,6 +235,16 @@ export function OrderDetailPage() {
           <OrderItems companyId={company.id} orderId={o.id} editable={!finished} />
           <OrderBilling companyId={company.id} orderId={o.id} orderNumber={o.number} />
           <OrderWarranty companyId={company.id} order={o} canCreate={can(['orders.create'])} canDecide={can(['orders.update'])} />
+          <OrderSignatures
+            companyId={company.id}
+            orderId={o.id}
+            delivered={Boolean(o.delivered_at)}
+            clientName={o.client.name}
+            companyName={companyDetails.data?.name ?? company.name}
+            userId={user?.id}
+            userName={(user?.user_metadata?.full_name as string | undefined) ?? ''}
+            canSign={can(['orders.update', 'orders.deliver'])}
+          />
 
           <section className="surface grid gap-2 rounded-lg p-5" aria-labelledby="diag-h">
             <h2 id="diag-h" className="font-semibold">

@@ -5,7 +5,7 @@ import { requireSupabase } from '@/lib/supabase'
 import { formatTaxId } from '@/lib/tax-id'
 import { formatIsoDate } from '../finance/period'
 import { modeLabels } from './meta'
-import { buildOrderPdf, NAVY } from './orderPdf'
+import { buildOrderPdf, NAVY, type SignedImage } from './orderPdf'
 
 export interface OrderPdfInput {
   kind: 'intake' | 'delivery'
@@ -31,7 +31,7 @@ export interface OrderPdfInput {
 /** Busca itens e totais atuais, monta o PDF com o logo e baixa o arquivo. */
 export async function downloadOrderPdf(input: OrderPdfInput): Promise<void> {
   const sb = requireSupabase()
-  const [items, totals, logo] = await Promise.all([
+  const [items, totals, logo, sigs] = await Promise.all([
     sb
       .from('service_order_items')
       .select('kind, description, qty, unit_price_cents, discount_cents, returned_at, created_at')
@@ -40,7 +40,15 @@ export async function downloadOrderPdf(input: OrderPdfInput): Promise<void> {
       .order('created_at'),
     sb.rpc('service_order_totals', { p_order_id: input.order.id }),
     loadLogoJpeg('/brand/phael-logo.webp', NAVY),
+    sb.from('order_signatures').select('signer_role, signer_name, image_data, signed_at').eq('order_id', input.order.id).eq('document', input.kind),
   ])
+  if (sigs.error) throw sigs.error
+  const signed = async (role: 'client' | 'company'): Promise<SignedImage | undefined> => {
+    const s = (sigs.data ?? []).find((x) => x.signer_role === role)
+    if (!s) return undefined
+    return { image: await loadLogoJpeg(s.image_data, [255, 255, 255], 1), name: s.signer_name, signedAt: formatDateTime(s.signed_at) }
+  }
+  const [clientSig, companySig] = await Promise.all([signed('client'), signed('company')])
   if (items.error) throw items.error
   if (totals.error) throw totals.error
   const t = totals.data?.[0]
@@ -80,6 +88,7 @@ export async function downloadOrderPdf(input: OrderPdfInput): Promise<void> {
       warranties: input.warranties.map((w) => ({ description: w.description, days: w.warranty_days, until: formatIsoDate(w.expires_on) })),
       terms: input.kind === 'intake' ? c.intake_terms : c.delivery_terms,
       generatedAt: formatDateTime(new Date().toISOString()),
+      signatures: { client: clientSig, company: companySig },
     },
     { header: logo, footer: logo },
   )
