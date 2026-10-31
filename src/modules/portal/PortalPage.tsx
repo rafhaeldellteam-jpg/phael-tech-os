@@ -66,7 +66,9 @@ export function PortalPage() {
     <div className="min-h-dvh">
       <header className="bg-navy-900 px-4 py-4">
         <div className="mx-auto flex max-w-2xl items-center justify-between gap-3">
-          <BrandLogo variant="full" className="h-12 w-auto" />
+          <div className="flex h-12 shrink-0 items-center">
+            <BrandLogo variant="full" className="max-h-full w-auto" />
+          </div>
           <span className="text-right text-sm text-white/80">Acompanhamento do seu atendimento</span>
         </div>
       </header>
