@@ -81,9 +81,16 @@ Ordem sugerida, cada item com migração + testes SQL + telas + testes:
   responsável registra o resultado do próprio atendimento.
 - Conversão em OS com cliente, equipamento, modo e técnico do agendamento.
 
-### Próximos incrementos (pendentes da Fase 2)
-1. Diagnóstico com checklist e orçamento com aprovação do cliente e versões.
-2. PDFs e anexos (fotos de entrada, laudos).
+### Entregue: diagnóstico e orçamento (pendências da Fase 2)
+- Modelos de checklist por tipo de equipamento (4 sugeridos); diagnóstico na OS com OK/defeito/não se
+  aplica e observação por item, laudo obrigatório para concluir; concluído não muda.
+- Orçamento com versões: rascunho editável, envio trava e leva a OS a "Aguardando aprovação", nova versão
+  substitui a anterior; decisão pela equipe ou pelo portal (com nome); orçamento vencido não é aprovado;
+  itens aprovados lançados na OS uma vez; PDF do orçamento com o logo.
+- Portal mostra o laudo e a versão enviada do orçamento.
+
+### Próximos incrementos
+1. Anexos (fotos de entrada e do reparo).
 
 ## Fase 4 — Expansão
 

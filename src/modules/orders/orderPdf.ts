@@ -3,7 +3,9 @@ import { PdfDocument, wrapText, type PdfJpeg, type Rgb } from '@/lib/pdf/writer'
 
 /** Dados do documento da OS (já formatados onde é texto livre). */
 export interface OrderPdfData {
-  kind: 'intake' | 'delivery'
+  kind: 'intake' | 'delivery' | 'quote'
+  /** Só para kind = 'quote'. */
+  quote?: { version: number; validUntil: string | null; deliveryDays: number | null; notes: string | null; status: string; decision: string | null; diagnosis: string | null }
   company: { name: string; legal_name: string | null; taxIdLabel: string | null; contact: string | null }
   order: {
     code: string
@@ -60,7 +62,7 @@ export function buildOrderPdf(data: OrderPdfData, logos: OrderPdfLogos): Uint8Ar
   const contentW = W - 2 * M
   const headerImg = doc.addImage(logos.header)
   const footerImg = logos.footer === logos.header ? headerImg : doc.addImage(logos.footer)
-  const title = data.kind === 'intake' ? 'Comprovante de entrada' : 'Comprovante de entrega'
+  const title = data.kind === 'intake' ? 'Comprovante de entrada' : data.kind === 'delivery' ? 'Comprovante de entrega' : `Orçamento v${data.quote?.version ?? 1}`
   const bottomLimit = H - FOOTER_H - 24
   let y = 0
 
@@ -143,8 +145,14 @@ export function buildOrderPdf(data: OrderPdfData, logos: OrderPdfLogos): Uint8Ar
     ['Equipamento', data.equipment.title ?? 'Atendimento sem equipamento'],
     ['Nº de série', data.equipment.serial],
     ['Tipo de atendimento', data.order.modeLabel],
-    [data.kind === 'intake' ? 'Previsão' : 'Situação na entrega', data.kind === 'intake' ? data.order.dueAt : data.order.statusLabel],
+    data.kind === 'quote'
+      ? ['Validade do orçamento', data.quote?.validUntil ?? null]
+      : [data.kind === 'intake' ? 'Previsão' : 'Situação na entrega', data.kind === 'intake' ? data.order.dueAt : data.order.statusLabel],
   ])
+  if (data.kind === 'quote' && data.quote?.diagnosis) {
+    section('Diagnóstico')
+    paragraph(data.quote.diagnosis)
+  }
 
   section('Problema e condições de entrada')
   doc.text(M, y, 'Problema relatado', { size: 7.5, color: MUTED })
@@ -208,6 +216,15 @@ export function buildOrderPdf(data: OrderPdfData, logos: OrderPdfLogos): Uint8Ar
     }
   }
 
+  if (data.kind === 'quote' && data.quote) {
+    section('Condições')
+    const q = data.quote
+    if (q.deliveryDays != null) paragraph(`Prazo estimado após aprovação: ${q.deliveryDays} dia(s) útil(eis).`)
+    if (q.validUntil) paragraph(`Orçamento válido até ${q.validUntil}.`)
+    if (q.notes) paragraph(q.notes)
+    if (q.decision) paragraph(q.decision, { color: BRAND })
+  }
+
   if (data.terms) {
     section(data.kind === 'intake' ? 'Termos de entrada' : 'Termos de entrega')
     paragraph(data.terms, { size: 8.5, color: MUTED })
@@ -219,7 +236,7 @@ export function buildOrderPdf(data: OrderPdfData, logos: OrderPdfLogos): Uint8Ar
   y += SIG_H + 18
   const sigW = (contentW - 40) / 2
   const slots: { x: number; sig: SignedImage | undefined; name: string; role: string }[] = [
-    { x: M, sig: data.signatures?.client, name: data.client.name, role: 'Cliente' },
+    { x: M, sig: data.signatures?.client, name: data.client.name, role: data.kind === 'quote' ? 'Aprovação do cliente' : 'Cliente' },
     { x: W - M - sigW, sig: data.signatures?.company, name: data.company.name, role: 'Responsável técnico' },
   ]
   for (const s of slots) {

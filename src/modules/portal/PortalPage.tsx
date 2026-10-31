@@ -30,6 +30,18 @@ interface PortalDoc {
   client_name: string | null
   equipment: string | null
   items: { kind: 'service' | 'part'; description: string; qty: number; unit_price_cents: number; discount_cents: number; total_cents: number; warranty_days: number | null }[]
+  quote: {
+    version: number
+    status: 'sent' | 'approved' | 'refused'
+    items: { kind: 'service' | 'part'; description: string; qty: number; unit_price_cents: number; discount_cents: number; warranty_days: number | null }[]
+    total_cents: number
+    valid_until: string | null
+    delivery_days: number | null
+    notes: string | null
+    decided_at: string | null
+    decided_by_name: string | null
+  } | null
+  diagnosis: { summary: string; finalized_at: string; fails: string[] } | null
   total_cents: number
   timeline: { at: string; label: string }[]
   warranties: { description: string; until: string }[]
@@ -119,7 +131,47 @@ function PortalContent({ token, doc, onChanged }: { token: string; doc: PortalDo
         </ol>
       )}
 
-      {o.can_decide && <Decision token={token} totalCents={doc.total_cents} onDone={onChanged} />}
+      {o.can_decide && <Decision token={token} totalCents={doc.quote?.status === 'sent' ? doc.quote.total_cents : doc.total_cents} onDone={onChanged} />}
+
+      {doc.diagnosis && (
+        <section className="surface grid gap-1 rounded-lg p-4 text-sm">
+          <h2 className="font-semibold">Diagnóstico</h2>
+          <p className="whitespace-pre-line">{doc.diagnosis.summary}</p>
+          {doc.diagnosis.fails.length > 0 && <p className="text-[13px] text-muted">Itens com defeito: {doc.diagnosis.fails.join(', ')}</p>}
+        </section>
+      )}
+
+      {doc.quote && (
+        <section className="surface grid gap-2 rounded-lg p-4 text-sm">
+          <h2 className="font-semibold">
+            Orçamento {doc.quote.version > 1 && `(versão ${doc.quote.version})`}
+            {doc.quote.status === 'approved' && <span className="ml-2 text-ok-600 dark:text-ok-500">Aprovado</span>}
+            {doc.quote.status === 'refused' && <span className="ml-2 text-danger-600">Recusado</span>}
+          </h2>
+          <ul className="divide-y divide-[var(--border)]">
+            {doc.quote.items.map((i, n) => (
+              <li key={n} className="flex items-start justify-between gap-3 py-2">
+                <span>
+                  {i.qty > 1 && `${i.qty} × `}
+                  {i.description}
+                  {i.warranty_days ? <span className="block text-[12px] text-muted">garantia de {i.warranty_days} dias</span> : null}
+                </span>
+                <span className="tabular-nums">{formatBRL(i.qty * i.unit_price_cents - i.discount_cents)}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="flex justify-between border-t border-line pt-2 text-base font-semibold">
+            <span>Total</span>
+            <span className="tabular-nums">{formatBRL(doc.quote.total_cents)}</span>
+          </p>
+          <p className="text-[13px] text-muted">
+            {doc.quote.valid_until && `Válido até ${formatIsoDate(doc.quote.valid_until)}. `}
+            {doc.quote.delivery_days != null && `Prazo após aprovação: ${doc.quote.delivery_days} dia(s). `}
+            {doc.quote.decided_by_name && doc.quote.decided_at && `Decisão de ${doc.quote.decided_by_name} em ${formatDateTime(doc.quote.decided_at)}.`}
+          </p>
+          {doc.quote.notes && <p className="text-[13px] whitespace-pre-line">{doc.quote.notes}</p>}
+        </section>
+      )}
 
       <section className="surface grid gap-2 rounded-lg p-4 text-sm">
         <h2 className="font-semibold">Seu pedido</h2>
@@ -150,7 +202,7 @@ function PortalContent({ token, doc, onChanged }: { token: string; doc: PortalDo
         </dl>
       </section>
 
-      {doc.items.length > 0 && (
+      {doc.items.length > 0 && !(doc.quote && doc.quote.status !== 'approved') && (
         <section className="surface grid gap-2 rounded-lg p-4 text-sm">
           <h2 className="font-semibold">Serviços e peças</h2>
           <ul className="divide-y divide-[var(--border)]">

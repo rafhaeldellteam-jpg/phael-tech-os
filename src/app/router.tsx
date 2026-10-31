@@ -33,6 +33,8 @@ import { ContractsPage } from '@/modules/digital/ContractsPage'
 import { DigitalPage } from '@/modules/digital/DigitalPage'
 import { AutomationsPage } from '@/modules/automations/AutomationsPage'
 import { ChargePage } from '@/modules/finance/ChargePage'
+import { ChecklistTemplatesPage } from '@/modules/diagnostics/ChecklistTemplatesPage'
+import { QuotesPage } from '@/modules/quotes/QuotesPage'
 import { PortalPage } from '@/modules/portal/PortalPage'
 import { ReportsPage } from '@/modules/reports/ReportsPage'
 import { SchedulePage } from '@/modules/schedule/SchedulePage'
@@ -151,6 +153,14 @@ export const router = createBrowserRouter([
               {
                 element: <RequirePermission anyOf={['finance.read']} />,
                 children: [{ path: '/contratos', element: <ContractsPage /> }],
+              },
+              {
+                element: <RequirePermission anyOf={['diagnostics.write']} />,
+                children: [{ path: '/diagnosticos', element: <ChecklistTemplatesPage /> }],
+              },
+              {
+                element: <RequirePermission anyOf={['quotes.read']} />,
+                children: [{ path: '/orcamentos', element: <QuotesPage /> }],
               },
               {
                 element: <RequirePermission anyOf={['schedule.read']} />,

@@ -24,6 +24,8 @@ import { useOrderWarranties } from '../warranties/queries'
 import { OrderItems } from './OrderItems'
 import { downloadOrderPdf } from './orderPdfDownload'
 import { OrderSignatures } from './OrderSignatures'
+import { OrderDiagnostics } from '../diagnostics/OrderDiagnostics'
+import { OrderQuotes } from '../quotes/OrderQuotes'
 import { OrderShare } from '../portal/OrderShare'
 import { orderKeys, useAssignable, useOrder, useOrderEvents, useWorkflow } from './queries'
 
@@ -233,6 +235,23 @@ export function OrderDetailPage() {
             </dl>
           </section>
 
+          <OrderDiagnostics
+            companyId={company.id}
+            orderId={o.id}
+            equipmentType={o.equipment?.type ?? null}
+            canWrite={can(['diagnostics.write'])}
+            editable={!finished}
+          />
+          <OrderQuotes
+            companyId={company.id}
+            orderId={o.id}
+            canRead={can(['quotes.read'])}
+            canWrite={can(['quotes.write'])}
+            canDecide={can(['quotes.record_decision'])}
+            canApply={can(['orders.update'])}
+            editable={!finished}
+            clientName={o.client.name}
+          />
           <OrderItems companyId={company.id} orderId={o.id} editable={!finished} />
           <OrderBilling companyId={company.id} orderId={o.id} orderNumber={o.number} />
           <OrderWarranty companyId={company.id} order={o} canCreate={can(['orders.create'])} canDecide={can(['orders.update'])} />
@@ -255,15 +274,6 @@ export function OrderDetailPage() {
             canSign={can(['orders.update', 'orders.deliver'])}
           />
 
-          <section className="surface grid gap-2 rounded-lg p-5" aria-labelledby="diag-h">
-            <h2 id="diag-h" className="font-semibold">
-              Diagnóstico e orçamento
-            </h2>
-            <p className="text-sm text-muted">
-              Checklists de diagnóstico e orçamento com aprovação do cliente chegam em um próximo incremento. Por enquanto,
-              lance serviços e peças acima e registre o diagnóstico como observação na linha do tempo.
-            </p>
-          </section>
         </div>
 
         <aside className="grid content-start gap-5">

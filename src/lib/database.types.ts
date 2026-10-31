@@ -30,6 +30,7 @@ export type WarrantyClaimStatus = 'open' | 'accepted' | 'denied' | 'resolved'
 export type AppointmentKind = 'onsite' | 'remote' | 'dropoff' | 'pickup' | 'other'
 export type DigitalKind = 'website' | 'ecommerce' | 'landing' | 'hosting' | 'domain' | 'email' | 'maintenance' | 'other'
 export type DigitalStatus = 'planning' | 'development' | 'active' | 'paused' | 'canceled'
+export type QuoteStatus = 'draft' | 'sent' | 'approved' | 'refused' | 'superseded' | 'canceled'
 export type SignatureDocument = 'intake' | 'delivery'
 export type SignatureRole = 'client' | 'company'
 export type ContractStatus = 'active' | 'paused' | 'ended'
@@ -736,6 +737,72 @@ export interface Database {
         Update: never
         Relationships: []
       }
+      checklist_templates: {
+        Row: {
+          id: string
+          company_id: string
+          name: string
+          equipment_type: string | null
+          items: string[]
+          active: boolean
+          created_at: Timestamp
+          updated_at: Timestamp
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      order_diagnostics: {
+        Row: {
+          id: string
+          company_id: string
+          order_id: string
+          template_name: string | null
+          results: Json
+          summary: string | null
+          technician_id: string | null
+          finalized_at: Timestamp | null
+          created_at: Timestamp
+          updated_at: Timestamp
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      quotes: {
+        Row: {
+          id: string
+          company_id: string
+          order_id: string
+          version: number
+          status: QuoteStatus
+          items: Json
+          total_cents: number
+          valid_until: string | null
+          delivery_days: number | null
+          notes: string | null
+          created_by: string | null
+          created_at: Timestamp
+          updated_at: Timestamp
+          sent_at: Timestamp | null
+          decided_at: Timestamp | null
+          decided_via: 'staff' | 'portal' | null
+          decided_by_name: string | null
+          decision_note: string | null
+          applied_at: Timestamp | null
+        }
+        Insert: never
+        Update: never
+        Relationships: [
+          {
+            foreignKeyName: 'quotes_company_id_order_id_fkey'
+            columns: ['company_id', 'order_id']
+            isOneToOne: false
+            referencedRelation: 'service_orders'
+            referencedColumns: ['company_id', 'id']
+          },
+        ]
+      }
       charge_links: {
         Row: {
           id: string
@@ -1151,6 +1218,16 @@ export interface Database {
         Args: { p_company_id: string; p_months?: number }
         Returns: { month: string; opened: number; delivered: number; billed_cents: number | null; received_cents: number | null; paid_cents: number | null }[]
       }
+      seed_checklist_templates: { Args: { p_company_id: string }; Returns: number }
+      save_checklist_template: { Args: { p_company_id: string; p_id: string | null; p_data: Json }; Returns: string }
+      start_diagnostic: { Args: { p_order_id: string; p_template_id: string }; Returns: string }
+      save_diagnostic: { Args: { p_diagnostic_id: string; p_results: Json; p_summary: string | null; p_finalize?: boolean }; Returns: undefined }
+      save_quote: { Args: { p_order_id: string; p_quote_id: string | null; p_data: Json }; Returns: string }
+      new_quote_version: { Args: { p_quote_id: string }; Returns: string }
+      send_quote: { Args: { p_quote_id: string }; Returns: undefined }
+      decide_quote_staff: { Args: { p_quote_id: string; p_approve: boolean; p_name: string; p_note?: string | null }; Returns: undefined }
+      apply_quote_items: { Args: { p_quote_id: string }; Returns: number }
+      cancel_quote: { Args: { p_quote_id: string }; Returns: undefined }
       create_charge_link: { Args: { p_entry_id: string; p_days?: number }; Returns: { link_id: string; token: string; expires_at: Timestamp }[] }
       mark_charge_sent: { Args: { p_link_id: string; p_sent_to: string }; Returns: undefined }
       revoke_charge_link: { Args: { p_link_id: string }; Returns: undefined }
@@ -1253,6 +1330,7 @@ export interface Database {
       appointment_kind: AppointmentKind
       digital_kind: DigitalKind
       signature_document: SignatureDocument
+      quote_status: QuoteStatus
       signature_role: SignatureRole
       digital_status: DigitalStatus
       contract_status: ContractStatus
