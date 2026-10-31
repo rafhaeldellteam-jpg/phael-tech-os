@@ -1,6 +1,5 @@
-import { useMutation, useQuery } from '@tanstack/react-query'
 import { CheckCircle2, Circle, MessageCircle } from 'lucide-react'
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useParams } from 'react-router'
 import { Alert } from '@/components/ui/Alert'
 import { BrandLogo } from '@/components/ui/BrandLogo'
@@ -47,15 +46,21 @@ const steps: { stage: PortalDoc['order']['stage'][]; label: string }[] = [
 /** Página pública: o cliente acompanha a OS pelo link, sem login. */
 export function PortalPage() {
   const { token = '' } = useParams()
-  const doc = useQuery({
-    queryKey: ['portal', token],
-    retry: false,
-    queryFn: async () => {
+  // Estado local (sem o cache global de consultas): o portal é público e não pode
+  // depender da sessão de quem eventualmente esteja logado no mesmo navegador.
+  const [state, setState] = useState<{ status: 'loading' } | { status: 'error' } | { status: 'ok'; doc: PortalDoc }>({ status: 'loading' })
+  const load = useCallback(async () => {
+    try {
       const { data, error } = await requireSupabase().rpc('portal_order', { p_token: token })
-      if (error) throw error
-      return data as unknown as PortalDoc
-    },
-  })
+      if (error || !data) throw error ?? new Error('vazio')
+      setState({ status: 'ok', doc: data as unknown as PortalDoc })
+    } catch {
+      setState({ status: 'error' })
+    }
+  }, [token])
+  useEffect(() => {
+    void load()
+  }, [load])
 
   return (
     <div className="min-h-dvh">
@@ -66,14 +71,14 @@ export function PortalPage() {
         </div>
       </header>
       <main className="mx-auto grid max-w-2xl gap-5 px-4 py-6">
-        {doc.isPending ? (
+        {state.status === 'loading' ? (
           <Spinner label="Carregando" />
-        ) : doc.isError ? (
+        ) : state.status === 'error' ? (
           <Alert tone="warning" title="Link inválido ou expirado">
             Peça um novo link para quem fez o seu atendimento.
           </Alert>
         ) : (
-          <PortalContent token={token} doc={doc.data} onChanged={() => void doc.refetch()} />
+          <PortalContent token={token} doc={state.doc} onChanged={() => void load()} />
         )}
       </main>
     </div>
@@ -216,18 +221,26 @@ function Decision({ token, totalCents, onDone }: { token: string; totalCents: nu
   const [choice, setChoice] = useState<'approve' | 'refuse' | null>(null)
   const [name, setName] = useState('')
   const [note, setNote] = useState('')
-  const decide = useMutation({
-    mutationFn: async () => {
-      const { error } = await requireSupabase().rpc('portal_decide', {
+  const [pending, setPending] = useState(false)
+  const [error, setError] = useState<unknown>(null)
+  const submit = async () => {
+    setPending(true)
+    setError(null)
+    try {
+      const { error: e } = await requireSupabase().rpc('portal_decide', {
         p_token: token,
         p_approve: choice === 'approve',
         p_name: name.trim(),
         p_note: note.trim() || null,
       })
-      if (error) throw error
-    },
-    onSuccess: onDone,
-  })
+      if (e) throw e
+      onDone()
+    } catch (e) {
+      setError(e)
+    } finally {
+      setPending(false)
+    }
+  }
 
   return (
     <section className="grid gap-3 rounded-lg border-2 border-attn-500 bg-attn-100 p-4 text-sm dark:bg-attn-600/15" aria-labelledby="dec-h">
@@ -235,7 +248,7 @@ function Decision({ token, totalCents, onDone }: { token: string; totalCents: nu
         Seu orçamento está pronto: {formatBRL(totalCents)}
       </h2>
       <p>Confira os serviços abaixo e diga se podemos seguir com o reparo.</p>
-      {decide.isError && <Alert tone="error">{toUserMessage(decide.error)}</Alert>}
+      {error != null && <Alert tone="error">{toUserMessage(error)}</Alert>}
       {choice === null ? (
         <div className="flex flex-wrap gap-2">
           <Button onClick={() => setChoice('approve')}>Aprovar orçamento</Button>
@@ -248,13 +261,13 @@ function Decision({ token, totalCents, onDone }: { token: string; totalCents: nu
           className="grid gap-3"
           onSubmit={(e) => {
             e.preventDefault()
-            if (name.trim().length >= 2) decide.mutate()
+            if (name.trim().length >= 2) void submit()
           }}
         >
           <TextField label="Seu nome completo" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" />
           <TextAreaField label={choice === 'refuse' ? 'Motivo (opcional)' : 'Observação (opcional)'} rows={2} value={note} onChange={(e) => setNote(e.target.value)} />
           <div className="flex flex-wrap gap-2">
-            <Button type="submit" variant={choice === 'refuse' ? 'danger' : 'primary'} loading={decide.isPending} disabled={name.trim().length < 2}>
+            <Button type="submit" variant={choice === 'refuse' ? 'danger' : 'primary'} loading={pending} disabled={name.trim().length < 2}>
               {choice === 'approve' ? 'Confirmar aprovação' : 'Confirmar recusa'}
             </Button>
             <Button variant="ghost" onClick={() => setChoice(null)}>

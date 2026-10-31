@@ -96,6 +96,11 @@ test('cadastro, criação de empresa, convite e auditoria', async ({ page }, tes
   await portal.goto(portalUrl.replace(/[A-Za-z0-9_-]{43}$/, 'x'.repeat(43)))
   await expect(portal.getByText('Link inválido ou expirado')).toBeVisible()
   await visitor.close()
+  // Também abre com a equipe logada no mesmo navegador (sessão não interfere no portal).
+  const backTo = page.url()
+  await page.goto(portalUrl)
+  await expect(page.getByRole('heading', { name: /OS-0001/ })).toBeVisible()
+  await page.goto(backTo)
 
   // Assinatura eletrônica do cliente no comprovante de entrada.
   await page.getByRole('button', { name: 'Colher assinatura do cliente' }).click()
