@@ -32,6 +32,7 @@ import { MembersPage } from '@/modules/settings/MembersPage'
 import { ContractsPage } from '@/modules/digital/ContractsPage'
 import { DigitalPage } from '@/modules/digital/DigitalPage'
 import { AutomationsPage } from '@/modules/automations/AutomationsPage'
+import { ChargePage } from '@/modules/finance/ChargePage'
 import { PortalPage } from '@/modules/portal/PortalPage'
 import { ReportsPage } from '@/modules/reports/ReportsPage'
 import { SchedulePage } from '@/modules/schedule/SchedulePage'
@@ -56,6 +57,7 @@ export const router = createBrowserRouter([
   { path: '/redefinir-senha', element: <ResetPasswordPage /> },
   // Portal do cliente: público, autorizado só pelo token do link.
   { path: '/acompanhar/:token', element: <PortalPage /> },
+  { path: '/cobranca/:token', element: <ChargePage /> },
   {
     element: <RequireAuth />,
     children: [

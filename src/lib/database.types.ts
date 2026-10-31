@@ -53,6 +53,10 @@ export interface Database {
           intake_terms: string | null
           delivery_terms: string | null
           auto_billing_enabled: boolean
+          pix_key_type: string | null
+          pix_key: string | null
+          pix_merchant_name: string | null
+          pix_city: string | null
           auto_billing_days_ahead: number
           stalled_order_days: number
           created_by: string | null
@@ -62,6 +66,10 @@ export interface Database {
         Insert: never
         Update: {
           auto_billing_enabled?: boolean
+          pix_key_type?: string | null
+          pix_key?: string | null
+          pix_merchant_name?: string | null
+          pix_city?: string | null
           auto_billing_days_ahead?: number
           stalled_order_days?: number
           intake_terms?: string | null
@@ -728,6 +736,24 @@ export interface Database {
         Update: never
         Relationships: []
       }
+      charge_links: {
+        Row: {
+          id: string
+          company_id: string
+          entry_id: string
+          expires_at: Timestamp
+          revoked_at: Timestamp | null
+          sent_to: string | null
+          sent_at: Timestamp | null
+          created_by: string | null
+          created_at: Timestamp
+          last_viewed_at: Timestamp | null
+          view_count: number
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
       automation_runs: {
         Row: {
           id: number
@@ -1125,6 +1151,10 @@ export interface Database {
         Args: { p_company_id: string; p_months?: number }
         Returns: { month: string; opened: number; delivered: number; billed_cents: number | null; received_cents: number | null; paid_cents: number | null }[]
       }
+      create_charge_link: { Args: { p_entry_id: string; p_days?: number }; Returns: { link_id: string; token: string; expires_at: Timestamp }[] }
+      mark_charge_sent: { Args: { p_link_id: string; p_sent_to: string }; Returns: undefined }
+      revoke_charge_link: { Args: { p_link_id: string }; Returns: undefined }
+      charge_view: { Args: { p_token: string }; Returns: Json }
       run_automations: { Args: { p_company_id: string }; Returns: Json }
       run_contract_billing_now: { Args: { p_company_id: string }; Returns: Json }
       automation_alerts: {

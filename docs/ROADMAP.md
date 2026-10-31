@@ -121,6 +121,13 @@ Ordem sugerida, cada item com migração + testes SQL + telas + testes:
   3 dias e garantias acabando em até 15 dias.
 - Histórico imutável de execuções em `/atividade`, com "Rodar cobrança agora".
 
+### Entregue: cobrança por e-mail com Pix
+- Chave Pix da empresa (celular, e-mail, CPF, CNPJ ou aleatória), nome e cidade do recebedor, com QR de teste.
+- Em cada conta a receber em aberto: "Cobrar por e-mail com Pix" monta a mensagem (valor em aberto,
+  vencimento, Pix copia e cola e link) e abre no Gmail para o usuário enviar; o envio fica registrado.
+- Página pública `/cobranca/<token>` com QR Code e copia e cola gerados no padrão BR Code do Banco Central
+  (CRC16 conferido com o exemplo oficial), valor sempre atualizado e aviso de "Pago".
+
 ### Próximos incrementos
 1. Integração com o Phael Tech Provision e camada opcional de IA.
 

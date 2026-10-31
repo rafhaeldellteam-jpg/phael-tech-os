@@ -256,6 +256,27 @@ test('cadastro, criação de empresa, convite e auditoria', async ({ page }, tes
   await page.getByRole('button', { name: 'Gerar agora' }).click()
   await expect(page.getByText('Tudo em dia: nenhuma cobrança nova.')).toBeVisible()
 
+  // Cobrança por e-mail com Pix: chave da empresa, mensagem pronta e página pública com QR Code.
+  await page.goto('/empresa')
+  await page.getByLabel('Chave Pix').fill('(11) 91334-7390')
+  await page.getByRole('button', { name: 'Salvar Pix' }).click()
+  await expect(page.getByText('Dados do Pix salvos.')).toBeVisible()
+  await expect(page.getByRole('img', { name: /QR Code Pix de teste/ })).toBeVisible()
+  await page.goto('/financeiro?aba=receber')
+  await page.getByRole('button', { name: /Manutenção mensal do site/ }).first().click()
+  await page.getByRole('button', { name: 'Cobrar por e-mail com Pix' }).click()
+  await page.getByRole('button', { name: 'Preparar cobrança com Pix' }).click()
+  await expect(page.getByLabel(/Mensagem/)).toHaveValue(/br\.gov\.bcb\.pix0114\+5511913347390/)
+  const chargeUrl = await page.getByRole('link', { name: 'Ver página da cobrança' }).getAttribute('href')
+  if (!chargeUrl) throw new Error('link da cobrança ausente')
+  const payer = await browser.newContext()
+  const payerPage = await payer.newPage()
+  await payerPage.goto(chargeUrl)
+  await expect(payerPage.getByRole('img', { name: 'QR Code Pix para pagamento' })).toBeVisible()
+  await expect(payerPage.getByText('R$ 150,00')).toBeVisible()
+  await payer.close()
+  await page.keyboard.press('Escape')
+
   // Automações: configuração e execução manual registrada no histórico.
   await page.goto('/atividade')
   await expect(page.getByRole('checkbox', { name: /Cobrança automática dos contratos/ })).toBeChecked()

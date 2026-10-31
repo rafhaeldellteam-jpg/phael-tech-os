@@ -74,9 +74,9 @@ select tests.ok(
     select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
     where n.nspname in ('public', 'private')
       and has_function_privilege('anon', p.oid, 'execute')
-      and not (n.nspname = 'public' and p.proname in ('portal_order', 'portal_decide'))
+      and not (n.nspname = 'public' and p.proname in ('portal_order', 'portal_decide', 'charge_view'))
   ),
-  'nenhuma função de public/private é executável por anon (exceto o portal com token)');
+  'nenhuma função de public/private é executável por anon (exceto portal e cobrança, que exigem token)');
 
 -- Regressão: todas as tabelas de public têm RLS habilitado.
 select tests.ok(

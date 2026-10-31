@@ -14,6 +14,7 @@ import { useActiveCompany, useCompany } from '@/core/company/useCompany'
 import { toUserMessage } from '@/lib/errors'
 import { requireSupabase } from '@/lib/supabase'
 import { formatTaxId, isValidTaxId, onlyDigits } from '@/lib/tax-id'
+import { PixSettings } from './PixSettings'
 import { settingsKeys, useCompanyDetails } from './queries'
 
 const optional = (max: number) => z.string().trim().max(max, `Máximo de ${max} caracteres`)
@@ -138,6 +139,7 @@ export function CompanySettingsPage() {
           )}
         </form>
       )}
+      {details.data && <PixSettings companyId={company.id} data={details.data} canEdit={canEdit} />}
     </div>
   )
 }

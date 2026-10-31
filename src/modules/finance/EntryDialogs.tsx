@@ -11,6 +11,7 @@ import type { FinanceDirection, Json, PaymentMethod } from '@/lib/database.types
 import { toUserMessage } from '@/lib/errors'
 import { centsToInput, formatBRL, parseMoney } from '@/lib/money'
 import { requireSupabase } from '@/lib/supabase'
+import { ChargeEmailDialog } from './ChargeEmail'
 import { previewInstallments } from './installments'
 import { formatIsoDate, isoDate } from './period'
 import { financeKeys, methodLabels, useAccounts, useCategories, useEntryPayments } from './queries'
@@ -198,6 +199,8 @@ export function EntryDialog({ companyId, entry, canWrite, onClose }: { companyId
   })
   const reversed = new Set((payments.data ?? []).filter((p) => p.reversal_of).map((p) => p.reversal_of))
   const verb = entry.direction === 'in' ? 'Recebimento' : 'Pagamento'
+  const [charging, setCharging] = useState(false)
+  if (charging) return <ChargeEmailDialog companyId={companyId} entry={entry} onClose={() => setCharging(false)} />
 
   return (
     <FormDialog
@@ -207,6 +210,11 @@ export function EntryDialog({ companyId, entry, canWrite, onClose }: { companyId
     >
       <div className="grid gap-4">
         {entry.cancel_reason && <Alert tone="warning" title="Cancelado">{entry.cancel_reason}</Alert>}
+        {canWrite && open && entry.direction === 'in' && mode === 'view' && (
+          <Button variant="secondary" className="justify-self-start" onClick={() => setCharging(true)}>
+            Cobrar por e-mail com Pix
+          </Button>
+        )}
         <section className="grid gap-2">
           <h3 className="text-sm font-semibold">{verb}s e estornos</h3>
           {payments.isPending ? (
