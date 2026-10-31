@@ -55,6 +55,7 @@ export interface Database {
           intake_terms: string | null
           delivery_terms: string | null
           auto_billing_enabled: boolean
+          ai_daily_limit: number
           pix_key_type: string | null
           pix_key: string | null
           pix_merchant_name: string | null
@@ -68,6 +69,7 @@ export interface Database {
         Insert: never
         Update: {
           auto_billing_enabled?: boolean
+          ai_daily_limit?: number
           pix_key_type?: string | null
           pix_key?: string | null
           pix_merchant_name?: string | null
@@ -738,6 +740,41 @@ export interface Database {
         Update: never
         Relationships: []
       }
+      equipment_provisionings: {
+        Row: {
+          id: string
+          company_id: string
+          equipment_id: string
+          file_name: string | null
+          provisioned_at: string | null
+          hostname: string | null
+          summary: Json
+          log: string | null
+          created_by: string | null
+          created_at: Timestamp
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      ai_requests: {
+        Row: {
+          id: number
+          company_id: string
+          user_id: string | null
+          task: string
+          order_id: string | null
+          ok: boolean | null
+          input_tokens: number | null
+          output_tokens: number | null
+          error: string | null
+          created_at: Timestamp
+          finished_at: Timestamp | null
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
       order_photos: {
         Row: {
           id: string
@@ -1238,6 +1275,9 @@ export interface Database {
         Args: { p_company_id: string; p_months?: number }
         Returns: { month: string; opened: number; delivered: number; billed_cents: number | null; received_cents: number | null; paid_cents: number | null }[]
       }
+      import_provision_report: { Args: { p_company_id: string; p_client_id: string; p_data: Json }; Returns: { equipment_id: string; created: boolean }[] }
+      ai_begin: { Args: { p_company_id: string; p_task: string; p_order_id: string }; Returns: number }
+      ai_finish: { Args: { p_request_id: number; p_ok: boolean; p_input_tokens: number | null; p_output_tokens: number | null; p_error: string | null }; Returns: undefined }
       register_order_photo: { Args: { p_order_id: string; p_path: string; p_data: Json }; Returns: string }
       update_order_photo: { Args: { p_photo_id: string; p_data: Json }; Returns: undefined }
       delete_order_photo: { Args: { p_photo_id: string }; Returns: string }

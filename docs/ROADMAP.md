@@ -138,8 +138,22 @@ Ordem sugerida, cada item com migração + testes SQL + telas + testes:
 - Página pública `/cobranca/<token>` com QR Code e copia e cola gerados no padrão BR Code do Banco Central
   (CRC16 conferido com o exemplo oficial), valor sempre atualizado e aviso de "Pago".
 
+### Entregue: Phael Tech Provision
+- "Importar do Provision" em Equipamentos: o relatório `.txt` que o Provision salva ao finalizar é lido no
+  navegador (computador, fabricante/modelo, série, sistema, processador, memória, vídeo, disco e log).
+- O número de série decide: mesmo cliente → atualiza a ficha; não existe → cria; outro cliente → recusa.
+- Histórico de provisionamentos na ficha do equipamento, com o log da sessão; reimportar o mesmo relatório
+  não duplica (índice único por equipamento, data e computador).
+
+### Entregue: IA opcional
+- "Sugerir laudo com IA" no diagnóstico (usa problema relatado, sintomas e checklist) e "Escrever mensagem
+  de atualização com IA" no link do cliente. O texto sempre volta editável; nada é salvo ou enviado sozinho.
+- Chamada pela Edge Function `ai-assist` com o token do usuário (as regras de acesso valem); a chave fica
+  só nos segredos do Supabase. Uso registrado em `ai_requests` com limite diário por empresa (padrão 50).
+  Configuração em `docs/IA.md`. Sem a chave, os botões explicam que a IA não está configurada.
+
 ### Próximos incrementos
-1. Integração com o Phael Tech Provision e camada opcional de IA.
+1. Base de conhecimento (`/conhecimento`).
 
 ## Fase 5 — Preparação comercial
 Onboarding de outras assistências, planos e limites, cobrança por assinatura,

@@ -324,4 +324,33 @@ test('cadastro, criação de empresa, convite e auditoria', async ({ page }, tes
   await expect(page.getByRole('heading', { name: 'Contas a receber por atraso' })).toBeVisible()
   await page.goto('/conhecimento')
   await expect(page.getByText('Módulo ainda não disponível')).toBeVisible()
+
+  // Provision: relatório .txt importado cria a ficha; reimportar atualiza sem duplicar.
+  const report = [
+    'PHAEL TECH PROVISION — Relatório de provisionamento (29/10/2026 14:35)',
+    '='.repeat(72),
+    'Computador ........ DESKTOP-E2E01',
+    'Fabricante/Modelo . LENOVO ThinkPad E14',
+    'Número de série (S/N): PF3E2E01',
+    'Sistema ........... Microsoft Windows 11 Pro 24H2 (build 26100.2314)',
+    'Memória ........... 16 GB em 2 pente(s) de 2 slot(s)',
+    '',
+    'LOG DA SESSÃO',
+    '-'.repeat(72),
+    '[14:01] Office instalado',
+  ].join('\r\n')
+  for (const expected of ['Equipamento criado a partir do relatório do Provision.', 'Ficha atualizada com o relatório do Provision.']) {
+    await page.goto('/equipamentos')
+    await page.getByRole('button', { name: 'Importar do Provision' }).click()
+    const dlg = page.getByRole('dialog')
+    await dlg.getByRole('combobox', { name: 'Cliente' }).fill('maria')
+    await page.getByRole('option', { name: /Maria Souza/ }).click()
+    await dlg.getByLabel('Relatório do Provision').setInputFiles({ name: 'Provisionamento-DESKTOP-E2E01.txt', mimeType: 'text/plain', buffer: Buffer.from(report, 'utf8') })
+    await expect(dlg.getByText('PF3E2E01')).toBeVisible()
+    await dlg.getByRole('button', { name: 'Importar', exact: true }).click()
+    await expect(page.getByText(expected)).toBeVisible()
+  }
+  const prov = page.getByRole('region', { name: /Provisionamentos/ })
+  await expect(prov.getByRole('listitem')).toHaveCount(1)
+  await expect(prov.getByText(/DESKTOP-E2E01/)).toBeVisible()
 })

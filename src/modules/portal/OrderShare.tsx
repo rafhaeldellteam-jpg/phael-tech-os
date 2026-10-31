@@ -1,9 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Copy, Link2, MessageCircle } from 'lucide-react'
+import { Copy, Link2, MessageCircle, Sparkles } from 'lucide-react'
 import { useState } from 'react'
 import { Alert } from '@/components/ui/Alert'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
+import { askAi } from '@/lib/ai'
 import { toUserMessage } from '@/lib/errors'
 import { formatCode, formatDate, formatDateTime, whatsappLink } from '@/lib/format'
 import { requireSupabase } from '@/lib/supabase'
@@ -71,6 +72,11 @@ export function OrderShare({
     onSuccess: refresh,
   })
 
+  const [aiText, setAiText] = useState('')
+  const ai = useMutation({
+    mutationFn: () => askAi('client_message', companyId, orderId),
+    onSuccess: setAiText,
+  })
   const now = Date.now()
   const active = (links.data ?? []).filter((l) => !l.revoked_at && new Date(l.expires_at).getTime() > now)
   const message = fresh
@@ -133,6 +139,40 @@ export function OrderShare({
           </Button>
         </div>
       )}
+
+      <div className="grid gap-2 border-t border-line pt-3">
+        <Button size="sm" variant="ghost" className="justify-self-start" loading={ai.isPending} onClick={() => ai.mutate()}>
+          <Sparkles className="size-4" aria-hidden /> Escrever mensagem de atualização com IA
+        </Button>
+        {ai.isError && <p className="text-[13px] text-danger-600">{ai.error.message}</p>}
+        {aiText && (
+          <>
+            <textarea
+              value={aiText}
+              onChange={(e) => setAiText(e.target.value)}
+              rows={5}
+              aria-label="Mensagem sugerida pela IA"
+              className="w-full rounded-md border border-line bg-[var(--surface)] p-2 text-sm"
+            />
+            <div className="flex flex-wrap gap-2">
+              {clientPhone && (
+                <a
+                  href={`${whatsappLink(clientPhone)}?text=${encodeURIComponent(aiText + (fresh ? `\n\nAcompanhe: ${fresh.url}` : ''))}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex h-8 items-center gap-2 rounded-md bg-ok-600 px-3 text-sm font-medium text-white hover:brightness-110"
+                >
+                  <MessageCircle className="size-4" aria-hidden /> Enviar pelo WhatsApp
+                </a>
+              )}
+              <Button size="sm" variant="secondary" onClick={() => void navigator.clipboard?.writeText(aiText)}>
+                <Copy className="size-4" aria-hidden /> Copiar
+              </Button>
+            </div>
+            <p className="text-[12px] text-muted">Texto sugerido pela IA com os dados da OS. Revise antes de enviar.</p>
+          </>
+        )}
+      </div>
 
       {(links.data ?? []).length > 0 && (
         <ul className="grid gap-1.5 text-[13px]">

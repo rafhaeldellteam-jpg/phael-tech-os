@@ -5,7 +5,8 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
 
 export default tseslint.config(
-  { ignores: ['dist', 'node_modules', 'playwright-report', 'test-results', 'src/lib/database.types.ts'] },
+  // supabase/functions roda no Deno (Edge Functions), com outro ambiente de tipos.
+  { ignores: ['dist', 'node_modules', 'playwright-report', 'test-results', 'src/lib/database.types.ts', 'supabase/functions'] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.strict],
     files: ['**/*.{ts,tsx}'],

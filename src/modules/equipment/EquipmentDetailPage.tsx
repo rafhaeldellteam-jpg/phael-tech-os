@@ -18,6 +18,7 @@ import { requireSupabase } from '@/lib/supabase'
 import { equipmentKeys, equipmentTitle, useEquipment, useEquipmentTypes } from './queries'
 import { stageTone } from '../orders/meta'
 import { useEquipmentOrders, useWorkflow } from '../orders/queries'
+import { ProvisionHistory } from './ProvisionImport'
 import { COMPUTER_TYPES } from './schema'
 
 function Item({ label, children }: { label: string; children: ReactNode }) {
@@ -122,6 +123,13 @@ export function EquipmentDetailPage() {
       />
 
       {(location.state as { saved?: boolean } | null)?.saved && <Alert tone="success">Equipamento salvo.</Alert>}
+      {(location.state as { provisioned?: string } | null)?.provisioned && (
+        <Alert tone="success">
+          {(location.state as { provisioned: string }).provisioned === 'created'
+            ? 'Equipamento criado a partir do relatório do Provision.'
+            : 'Ficha atualizada com o relatório do Provision.'}
+        </Alert>
+      )}
       {archive.isError && <Alert tone="error">{toUserMessage(archive.error)}</Alert>}
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
@@ -199,6 +207,8 @@ export function EquipmentDetailPage() {
               </div>
             </div>
           </section>
+
+          <ProvisionHistory companyId={company.id} equipmentId={e.id} />
 
           <section className="surface grid gap-2 rounded-lg p-5 text-sm" aria-labelledby="hist-h">
             <div className="flex items-center justify-between gap-2">

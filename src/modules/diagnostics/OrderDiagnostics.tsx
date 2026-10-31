@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ClipboardCheck } from 'lucide-react'
+import { ClipboardCheck, Sparkles } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router'
 import { Alert } from '@/components/ui/Alert'
@@ -9,6 +9,7 @@ import { SelectField } from '@/components/ui/Field'
 import { Spinner } from '@/components/ui/Spinner'
 import { TextAreaField } from '@/components/ui/TextArea'
 import type { Json } from '@/lib/database.types'
+import { askAi } from '@/lib/ai'
 import { toUserMessage } from '@/lib/errors'
 import { formatDateTime } from '@/lib/format'
 import { requireSupabase } from '@/lib/supabase'
@@ -97,7 +98,7 @@ export function OrderDiagnostics({
         <>
           {start.isError && <Alert tone="error">{toUserMessage(start.error)}</Alert>}
           {draft ? (
-            <DiagnosticForm key={draft.id} diag={draft} canWrite={canWrite} onSaved={refresh} />
+            <DiagnosticForm key={draft.id} companyId={companyId} orderId={orderId} diag={draft} canWrite={canWrite} onSaved={refresh} />
           ) : (
             canWrite &&
             editable &&
@@ -176,10 +177,14 @@ function DoneDiagnostic({ diag }: { diag: { template_name: string | null; result
 }
 
 function DiagnosticForm({
+  companyId,
+  orderId,
   diag,
   canWrite,
   onSaved,
 }: {
+  companyId: string
+  orderId: string
   diag: { id: string; template_name: string | null; results: Json; summary: string | null }
   canWrite: boolean
   onSaved: () => Promise<unknown>
@@ -200,6 +205,10 @@ function DiagnosticForm({
     onSuccess: async () => {
       await onSaved()
     },
+  })
+  const suggest = useMutation({
+    mutationFn: () => askAi('diagnosis', companyId, orderId, { checklist: items }),
+    onSuccess: (text) => setSummary((s) => (s.trim() ? `${s.trim()}\n\n${text}` : text)),
   })
   const set = (i: number, patch: Partial<CheckItem>) => setItems((list) => list.map((it, n) => (n === i ? { ...it, ...patch } : it)))
   const pending = items.filter((i) => !i.result).length
@@ -251,7 +260,16 @@ function DiagnosticForm({
           </li>
         ))}
       </ul>
-      <TextAreaField label="Laudo (conclusão)" rows={3} value={summary} onChange={(e) => setSummary(e.target.value)} placeholder="Ex.: bateria viciada, recomendada a troca." />
+      <TextAreaField label="Laudo (conclusão)" rows={4} value={summary} onChange={(e) => setSummary(e.target.value)} placeholder="Ex.: bateria viciada, recomendada a troca." />
+      {canWrite && (
+        <div className="grid gap-1">
+          <Button size="sm" variant="ghost" className="justify-self-start" loading={suggest.isPending} onClick={() => suggest.mutate()}>
+            <Sparkles className="size-4" aria-hidden /> Sugerir laudo com IA
+          </Button>
+          {suggest.isError && <p className="text-[13px] text-danger-600">{suggest.error.message}</p>}
+          {suggest.isSuccess && <p className="text-[12px] text-muted">Sugestão da IA a partir do checklist: revise antes de concluir.</p>}
+        </div>
+      )}
       {canWrite && (
         <div className="flex flex-wrap gap-2">
           <Button variant="secondary" loading={save.isPending && save.variables === false} onClick={() => save.mutate(false)}>

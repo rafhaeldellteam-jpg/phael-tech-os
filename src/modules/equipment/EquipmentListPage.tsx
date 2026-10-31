@@ -1,8 +1,8 @@
-import { Laptop, Plus, Search } from 'lucide-react'
+import { Laptop, MonitorCog, Plus, Search } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { Badge } from '@/components/ui/Badge'
-import { ButtonLink } from '@/components/ui/Button'
+import { Button, ButtonLink } from '@/components/ui/Button'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { ErrorState } from '@/components/ui/ErrorState'
 import { PageHeader } from '@/components/ui/PageHeader'
@@ -10,6 +10,7 @@ import { Pagination } from '@/components/ui/Pagination'
 import { Spinner } from '@/components/ui/Spinner'
 import { useActiveCompany, useCompany } from '@/core/company/useCompany'
 import { formatCode, formatDate } from '@/lib/format'
+import { ProvisionImportDialog } from './ProvisionImport'
 import { EQUIPMENT_PAGE_SIZE, equipmentTitle, useEquipmentList, useEquipmentTypes, type EquipmentFilters } from './queries'
 
 function useFilters(): [EquipmentFilters, (patch: Partial<EquipmentFilters>) => void] {
@@ -37,6 +38,7 @@ export function EquipmentListPage() {
   const { can } = useCompany()
   const [filters, setFilters] = useFilters()
   const [draft, setDraft] = useState(filters.q)
+  const [importing, setImporting] = useState(false)
   const types = useEquipmentTypes()
   const list = useEquipmentList(company.id, filters)
   const typeLabel = (key: string) => types.data?.find((t) => t.key === key)?.label ?? key
@@ -55,12 +57,18 @@ export function EquipmentListPage() {
         title="Equipamentos"
         actions={
           can(['equipment.write']) && (
-            <ButtonLink to="/equipamentos/novo">
-              <Plus className="size-4" aria-hidden /> Novo equipamento
-            </ButtonLink>
+            <>
+              <Button variant="secondary" onClick={() => setImporting(true)}>
+                <MonitorCog className="size-4" aria-hidden /> Importar do Provision
+              </Button>
+              <ButtonLink to="/equipamentos/novo">
+                <Plus className="size-4" aria-hidden /> Novo equipamento
+              </ButtonLink>
+            </>
           )
         }
       />
+      {importing && <ProvisionImportDialog companyId={company.id} onClose={() => setImporting(false)} />}
 
       <div className="flex flex-wrap items-end gap-3">
         <label className="relative min-w-60 flex-1">
