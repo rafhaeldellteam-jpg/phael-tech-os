@@ -24,6 +24,7 @@ import { useOrderWarranties } from '../warranties/queries'
 import { OrderItems } from './OrderItems'
 import { downloadOrderPdf } from './orderPdfDownload'
 import { OrderSignatures } from './OrderSignatures'
+import { OrderPhotos } from './OrderPhotos'
 import { OrderDiagnostics } from '../diagnostics/OrderDiagnostics'
 import { OrderQuotes } from '../quotes/OrderQuotes'
 import { OrderShare } from '../portal/OrderShare'
@@ -235,6 +236,7 @@ export function OrderDetailPage() {
             </dl>
           </section>
 
+          <OrderPhotos companyId={company.id} orderId={o.id} canUpload={can(['orders.update', 'orders.create', 'diagnostics.write'])} canDelete={can(['orders.update'])} />
           <OrderDiagnostics
             companyId={company.id}
             orderId={o.id}

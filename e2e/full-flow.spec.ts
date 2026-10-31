@@ -81,6 +81,13 @@ test('cadastro, criação de empresa, convite e auditoria', async ({ page }, tes
   expect(bytes.subarray(0, 8).toString('latin1')).toBe('%PDF-1.4')
   expect(bytes.toString('latin1')).toContain('/DCTDecode')
 
+  // Foto de entrada: comprimida no navegador, enviada ao Storage e liberada para o cliente.
+  const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4nGP8z8DAwMDAxMDAwMDAAAANHQEDasKb6QAAAABJRU5ErkJggg==', 'base64')
+  await page.getByLabel('Adicionar fotos').setInputFiles({ name: 'entrada.png', mimeType: 'image/png', buffer: png })
+  await expect(page.getByRole('img', { name: 'Foto de entrada' })).toBeVisible()
+  await page.getByRole('button', { name: 'Mostrar ao cliente' }).click()
+  await expect(page.getByText('Cliente vê')).toBeVisible()
+
   // Portal do cliente: link sem login, só dados não sensíveis.
   await page.getByRole('button', { name: 'Gerar link' }).click()
   const portalUrl = await page.getByRole('textbox', { name: 'Link de acompanhamento' }).inputValue()
@@ -93,6 +100,7 @@ test('cadastro, criação de empresa, convite e auditoria', async ({ page }, tes
   await expect(portal.getByRole('heading', { name: /OS-0001/ })).toBeVisible()
   await expect(portal.getByText('Olá, Maria.')).toBeVisible()
   await expect(portal.getByText('529.982.247-25')).toHaveCount(0)
+  await expect(portal.getByRole('img', { name: 'Foto do atendimento' })).toBeVisible()
   await portal.goto(portalUrl.replace(/[A-Za-z0-9_-]{43}$/, 'x'.repeat(43)))
   await expect(portal.getByText('Link inválido ou expirado')).toBeVisible()
   await visitor.close()

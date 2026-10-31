@@ -74,7 +74,8 @@ select tests.ok(
     select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
     where n.nspname in ('public', 'private')
       and has_function_privilege('anon', p.oid, 'execute')
-      and not (n.nspname = 'public' and p.proname in ('portal_order', 'portal_decide', 'charge_view'))
+      and not (n.nspname = 'public' and p.proname in ('portal_order', 'portal_decide', 'portal_photos', 'charge_view'))
+      and not (n.nspname = 'private' and p.proname in ('path_uuid', 'is_client_visible_photo'))
   ),
   'nenhuma função de public/private é executável por anon (exceto portal e cobrança, que exigem token)');
 

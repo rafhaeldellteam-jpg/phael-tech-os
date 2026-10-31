@@ -89,8 +89,11 @@ Ordem sugerida, cada item com migração + testes SQL + telas + testes:
   itens aprovados lançados na OS uma vez; PDF do orçamento com o logo.
 - Portal mostra o laudo e a versão enviada do orçamento.
 
-### Próximos incrementos
-1. Anexos (fotos de entrada e do reparo).
+### Entregue: fotos da OS
+- Envio pelo celular (câmera ou galeria), comprimido no aparelho (JPEG, 1600 px, sem EXIF/GPS), para o
+  bucket privado `order-photos` no caminho `<empresa>/<os>/<uuid>.jpg`; etapa (entrada, reparo, entrega),
+  legenda e "mostrar ao cliente". Políticas do Storage: envia quem trabalha na OS, vê quem acessa a OS,
+  visitante do portal só lê as fotos liberadas; arquivo com registro não é apagado direto.
 
 ## Fase 4 — Expansão
 

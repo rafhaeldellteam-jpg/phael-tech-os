@@ -99,6 +99,47 @@ export function PortalPage() {
   )
 }
 
+function PortalPhotos({ token }: { token: string }) {
+  const [photos, setPhotos] = useState<{ url: string; caption: string | null }[]>([])
+  useEffect(() => {
+    let alive = true
+    void (async () => {
+      const sb = requireSupabase()
+      const { data } = await sb.rpc('portal_photos', { p_token: token })
+      if (!data || data.length === 0) return
+      const signed = await sb.storage.from('order-photos').createSignedUrls(
+        data.map((p) => p.path),
+        3600,
+      )
+      if (!alive || signed.error) return
+      setPhotos(
+        data
+          .map((p, i) => ({ url: signed.data[i]?.signedUrl ?? '', caption: p.caption }))
+          .filter((p) => p.url),
+      )
+    })()
+    return () => {
+      alive = false
+    }
+  }, [token])
+  if (photos.length === 0) return null
+  return (
+    <section className="surface grid gap-2 rounded-lg p-4 text-sm">
+      <h2 className="font-semibold">Fotos</h2>
+      <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+        {photos.map((p, i) => (
+          <li key={i} className="grid gap-1">
+            <a href={p.url} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-md border border-line">
+              <img src={p.url} alt={p.caption ?? 'Foto do atendimento'} loading="lazy" className="aspect-[4/3] w-full object-cover" />
+            </a>
+            {p.caption && <span className="text-[12px] text-muted">{p.caption}</span>}
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
 function PortalContent({ token, doc, onChanged }: { token: string; doc: PortalDoc; onChanged: () => void }) {
   const o = doc.order
   const stopped = o.stage === 'stopped'
@@ -132,6 +173,8 @@ function PortalContent({ token, doc, onChanged }: { token: string; doc: PortalDo
       )}
 
       {o.can_decide && <Decision token={token} totalCents={doc.quote?.status === 'sent' ? doc.quote.total_cents : doc.total_cents} onDone={onChanged} />}
+
+      <PortalPhotos token={token} />
 
       {doc.diagnosis && (
         <section className="surface grid gap-1 rounded-lg p-4 text-sm">

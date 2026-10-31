@@ -30,6 +30,7 @@ export type WarrantyClaimStatus = 'open' | 'accepted' | 'denied' | 'resolved'
 export type AppointmentKind = 'onsite' | 'remote' | 'dropoff' | 'pickup' | 'other'
 export type DigitalKind = 'website' | 'ecommerce' | 'landing' | 'hosting' | 'domain' | 'email' | 'maintenance' | 'other'
 export type DigitalStatus = 'planning' | 'development' | 'active' | 'paused' | 'canceled'
+export type PhotoStage = 'intake' | 'repair' | 'delivery' | 'other'
 export type QuoteStatus = 'draft' | 'sent' | 'approved' | 'refused' | 'superseded' | 'canceled'
 export type SignatureDocument = 'intake' | 'delivery'
 export type SignatureRole = 'client' | 'company'
@@ -737,6 +738,25 @@ export interface Database {
         Update: never
         Relationships: []
       }
+      order_photos: {
+        Row: {
+          id: string
+          company_id: string
+          order_id: string
+          storage_path: string
+          stage: PhotoStage
+          caption: string | null
+          visible_to_client: boolean
+          width: number | null
+          height: number | null
+          size_bytes: number | null
+          uploaded_by: string | null
+          created_at: Timestamp
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
       checklist_templates: {
         Row: {
           id: string
@@ -1218,6 +1238,10 @@ export interface Database {
         Args: { p_company_id: string; p_months?: number }
         Returns: { month: string; opened: number; delivered: number; billed_cents: number | null; received_cents: number | null; paid_cents: number | null }[]
       }
+      register_order_photo: { Args: { p_order_id: string; p_path: string; p_data: Json }; Returns: string }
+      update_order_photo: { Args: { p_photo_id: string; p_data: Json }; Returns: undefined }
+      delete_order_photo: { Args: { p_photo_id: string }; Returns: string }
+      portal_photos: { Args: { p_token: string }; Returns: { path: string; stage: PhotoStage; caption: string | null }[] }
       seed_checklist_templates: { Args: { p_company_id: string }; Returns: number }
       save_checklist_template: { Args: { p_company_id: string; p_id: string | null; p_data: Json }; Returns: string }
       start_diagnostic: { Args: { p_order_id: string; p_template_id: string }; Returns: string }
@@ -1331,6 +1355,7 @@ export interface Database {
       digital_kind: DigitalKind
       signature_document: SignatureDocument
       quote_status: QuoteStatus
+      photo_stage: PhotoStage
       signature_role: SignatureRole
       digital_status: DigitalStatus
       contract_status: ContractStatus
