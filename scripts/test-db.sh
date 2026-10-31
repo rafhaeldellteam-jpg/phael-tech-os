@@ -38,6 +38,12 @@ for f in "$ROOT"/supabase/tests/sql/[0-9][0-9]_*.sql; do
     passed=$((passed + $(echo "$out" | grep -c 'NOTICE:  ok - ' || true)))
   else
     echo "$out" | grep -E 'ok - |ERROR' | sed -E 's/^.*(NOTICE|ERROR):  /  /'
+    # No GitHub Actions, a falha vira anotação (visível sem baixar o log).
+    if [[ -n "${GITHUB_ACTIONS:-}" ]]; then
+      echo "$out" | grep -E 'not ok|ERROR' | head -5 | while IFS= read -r line; do
+        echo "::error title=SQL ${name}::${line//$'\n'/ }"
+      done
+    fi
     failed=$((failed + 1))
   fi
 done
