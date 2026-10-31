@@ -43,7 +43,7 @@ export function splitMakerModel(value: string): { manufacturer: string | null; m
 }
 
 export function parseProvisionReport(text: string): ProvisionReport {
-  const lines = text.replace(/^﻿/, '').replace(/\r\n?/g, '\n').split('\n')
+  const lines = text.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n').split('\n')
   if (!/PHAEL TECH PROVISION/i.test(lines[0] ?? '')) {
     throw new Error('Este arquivo não parece um relatório do Phael Tech Provision.')
   }
