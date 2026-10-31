@@ -256,6 +256,13 @@ test('cadastro, criação de empresa, convite e auditoria', async ({ page }, tes
   await page.getByRole('button', { name: 'Gerar agora' }).click()
   await expect(page.getByText('Tudo em dia: nenhuma cobrança nova.')).toBeVisible()
 
+  // Automações: configuração e execução manual registrada no histórico.
+  await page.goto('/atividade')
+  await expect(page.getByRole('checkbox', { name: /Cobrança automática dos contratos/ })).toBeChecked()
+  await page.getByRole('button', { name: 'Rodar cobrança agora' }).click()
+  await expect(page.getByText(/cobrança\(s\) criada\(s\)\./)).toBeVisible()
+  await expect(page.getByRole('cell', { name: 'Manual' }).first()).toBeVisible()
+
   // Financeiro abre com dados reais; módulo futuro aparece como indisponível.
   await page.goto('/relatorios')
   await expect(page.getByRole('heading', { name: 'Relatórios' })).toBeVisible()

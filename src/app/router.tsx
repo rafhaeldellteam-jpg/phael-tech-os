@@ -31,6 +31,7 @@ import { CompanySettingsPage } from '@/modules/settings/CompanySettingsPage'
 import { MembersPage } from '@/modules/settings/MembersPage'
 import { ContractsPage } from '@/modules/digital/ContractsPage'
 import { DigitalPage } from '@/modules/digital/DigitalPage'
+import { AutomationsPage } from '@/modules/automations/AutomationsPage'
 import { PortalPage } from '@/modules/portal/PortalPage'
 import { ReportsPage } from '@/modules/reports/ReportsPage'
 import { SchedulePage } from '@/modules/schedule/SchedulePage'
@@ -156,6 +157,10 @@ export const router = createBrowserRouter([
               {
                 element: <RequirePermission anyOf={['orders.read_all', 'orders.read_assigned']} />,
                 children: [{ path: '/garantias', element: <WarrantiesPage /> }],
+              },
+              {
+                element: <RequirePermission anyOf={['company.update', 'finance.write']} />,
+                children: [{ path: '/atividade', element: <AutomationsPage /> }],
               },
               {
                 element: <RequirePermission anyOf={['audit.read']} />,

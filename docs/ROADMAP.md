@@ -112,9 +112,17 @@ Ordem sugerida, cada item com migração + testes SQL + telas + testes:
   "Aguardando aprovação". Não expõe custos, notas internas, senha do equipamento nem CPF/CNPJ.
 - Só `portal_order` e `portal_decide` são executáveis por visitantes sem login (teste de regressão).
 
+### Entregue: automações
+- Cobrança automática dos contratos (liga/desliga, antecedência configurável): agendador do banco
+  (pg_cron, 06:17 de Brasília) e, como garantia, a primeira abertura do painel no dia. Índice único por
+  empresa/tarefa/dia impede execução dupla; a geração continua idempotente por contrato e vencimento.
+- Avisos no painel calculados na hora e filtrados por permissão: contas a receber vencidas, contas a pagar
+  em até 3 dias, domínios em até 30 dias, OS paradas (prazo configurável), prontas sem retirada há mais de
+  3 dias e garantias acabando em até 15 dias.
+- Histórico imutável de execuções em `/atividade`, com "Rodar cobrança agora".
+
 ### Próximos incrementos
-1. Automações idempotentes (geração mensal de cobranças, lembretes de vencimento).
-2. Integração com o Phael Tech Provision e camada opcional de IA.
+1. Integração com o Phael Tech Provision e camada opcional de IA.
 
 ## Fase 5 — Preparação comercial
 Onboarding de outras assistências, planos e limites, cobrança por assinatura,

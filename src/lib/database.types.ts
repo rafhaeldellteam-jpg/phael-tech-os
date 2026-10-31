@@ -52,12 +52,18 @@ export interface Database {
           currency: string
           intake_terms: string | null
           delivery_terms: string | null
+          auto_billing_enabled: boolean
+          auto_billing_days_ahead: number
+          stalled_order_days: number
           created_by: string | null
           created_at: Timestamp
           updated_at: Timestamp
         }
         Insert: never
         Update: {
+          auto_billing_enabled?: boolean
+          auto_billing_days_ahead?: number
+          stalled_order_days?: number
           intake_terms?: string | null
           delivery_terms?: string | null
           name?: string
@@ -722,6 +728,24 @@ export interface Database {
         Update: never
         Relationships: []
       }
+      automation_runs: {
+        Row: {
+          id: number
+          company_id: string
+          job: string
+          trigger: 'schedule' | 'dashboard' | 'manual'
+          run_date: string
+          started_at: Timestamp
+          finished_at: Timestamp | null
+          ok: boolean
+          created_count: number
+          detail: string | null
+          actor_id: string | null
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
       portal_links: {
         Row: {
           id: string
@@ -1100,6 +1124,12 @@ export interface Database {
       report_monthly: {
         Args: { p_company_id: string; p_months?: number }
         Returns: { month: string; opened: number; delivered: number; billed_cents: number | null; received_cents: number | null; paid_cents: number | null }[]
+      }
+      run_automations: { Args: { p_company_id: string }; Returns: Json }
+      run_contract_billing_now: { Args: { p_company_id: string }; Returns: Json }
+      automation_alerts: {
+        Args: { p_company_id: string }
+        Returns: { kind: string; severity: 'danger' | 'attn' | 'info'; title: string; total: number; amount_cents: number | null; items: Json; link: string }[]
       }
       create_portal_link: { Args: { p_order_id: string; p_days?: number }; Returns: { link_id: string; token: string; expires_at: Timestamp }[] }
       revoke_portal_link: { Args: { p_link_id: string }; Returns: undefined }

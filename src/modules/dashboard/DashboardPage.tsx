@@ -17,8 +17,7 @@ import { useLowStockCount } from '../inventory/queries'
 import { useWarrantyStats } from '../warranties/queries'
 import { useAppointmentsToday } from '../schedule/queries'
 import { formatTime } from '../schedule/dates'
-import { useExpiringDomains } from '../digital/queries'
-import { formatIsoDate } from '../finance/period'
+import { AlertsPanel, useDailyAutomations } from '../automations/AlertsPanel'
 import { useOrderStats } from '../orders/queries'
 import { useCompanyDetails, useMembers } from '../settings/queries'
 
@@ -117,7 +116,7 @@ export function DashboardPage() {
   const warranty = useWarrantyStats(active.company.id, canOrders)
   const canSchedule = can(['schedule.read'])
   const agenda = useAppointmentsToday(active.company.id, canSchedule)
-  const domains = useExpiringDomains(active.company.id, 30, can(['clients.read']))
+  useDailyAutomations(active.company.id)
 
   const firstName = ((user?.user_metadata?.full_name as string | undefined) ?? '').split(' ')[0]
   const profileComplete = Boolean(details.data?.tax_id && (details.data.email || details.data.phone))
@@ -162,22 +161,7 @@ export function DashboardPage() {
         </Link>
       )}
 
-      {(domains.data ?? []).length > 0 && (
-        <Link
-          to="/sites"
-          className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-attn-500/50 bg-attn-100 px-4 py-3 text-sm hover:brightness-95 dark:bg-attn-600/15"
-        >
-          <span>
-            Domínio(s) vencendo em até 30 dias:{' '}
-            {(domains.data ?? [])
-              .slice(0, 3)
-              .map((d) => `${d.name} (${d.client_name}, ${formatIsoDate(d.domain_expires_on)})`)
-              .join('; ')}
-            {(domains.data ?? []).length > 3 && ` e mais ${(domains.data ?? []).length - 3}`}
-          </span>
-          <span className="font-medium underline underline-offset-4">Ver sites</span>
-        </Link>
-      )}
+      <AlertsPanel companyId={active.company.id} />
 
       {canOrders && (warranty.data?.open_claims ?? 0) > 0 && (
         <Link

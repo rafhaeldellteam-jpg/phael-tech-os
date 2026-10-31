@@ -75,7 +75,7 @@ export const navigation: NavSection[] = [
       { path: '/empresa', label: 'Dados da empresa', icon: Building2, requires: ['company.read'], phase: 1, ready: true },
       { path: '/equipe', label: 'Equipe e permissões', icon: Users, requires: ['members.read'], phase: 1, ready: true },
       { path: '/auditoria', label: 'Auditoria', icon: ScrollText, requires: ['audit.read'], phase: 1, ready: true },
-      { path: '/atividade', label: 'Automações', icon: Activity, requires: ['company.update'], phase: 4 },
+      { path: '/atividade', label: 'Automações', icon: Activity, requires: ['company.update', 'finance.write'], phase: 4, ready: true },
     ],
   },
 ]
