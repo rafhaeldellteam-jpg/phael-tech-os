@@ -9,6 +9,8 @@ export default defineConfig({
   use: {
     baseURL: 'http://localhost:4173',
     trace: 'on-first-retry',
+    // Ação travada falha em 15 s com o seletor na mensagem (em vez de estourar o tempo do teste).
+    actionTimeout: 15_000,
   },
   projects: [
     { name: 'desktop', use: { ...devices['Desktop Chrome'] } },

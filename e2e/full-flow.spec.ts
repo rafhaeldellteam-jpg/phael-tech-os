@@ -137,7 +137,7 @@ test('cadastro, criação de empresa, convite e auditoria', async ({ page }, tes
   await done.getByRole('button', { name: 'OK' }).click()
   await expect(sp.getByText('Documento assinado', { exact: true })).toBeVisible()
   await expect(sp.getByRole('button', { name: 'Enviar assinatura' })).toHaveCount(0)
-  const signedPdf = sp.waitForEvent('download')
+  const signedPdf = sp.waitForEvent('download', { timeout: 15_000 })
   await sp.getByRole('button', { name: 'Baixar documento assinado (PDF)' }).click()
   expect((await signedPdf).suggestedFilename()).toBe('OS-0001-entrada.pdf')
   await sp.reload()
