@@ -81,4 +81,7 @@ Pendências de processo para o controlador (Phael Tech Support):
   notas internas, senha do equipamento nem documento do cliente) e `sign_by_link`.
 - Assina uma única vez: índice único por OS, documento e papel; a tentativa seguinte falha com 23505
   e a assinatura é imutável. Registramos canal (`remote_link`), IP e navegador de quem assinou.
+- A assinatura da empresa pode ser apagada só por `remove_company_signature` (equipe com permissão de
+  colher assinaturas), com registro na linha do tempo e na auditoria; o gatilho só libera o DELETE do id
+  marcado pela função na própria transação. A assinatura do cliente nunca pode ser apagada.
 

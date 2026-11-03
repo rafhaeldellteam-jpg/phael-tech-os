@@ -148,6 +148,20 @@ test('cadastro, criação de empresa, convite e auditoria', async ({ page }, tes
   // A assinatura do cliente aparece sozinha para a equipe.
   await expect(page.getByRole('img', { name: 'Assinatura de Maria Souza' })).toBeVisible({ timeout: 20_000 })
   await expect(page.getByRole('button', { name: 'Enviar link para o cliente assinar' })).toHaveCount(0)
+  await expect(page.getByText('O cliente assinou (Maria Souza).')).toBeVisible()
+  const freshPdf = page.waitForEvent('download', { timeout: 15_000 })
+  await page.getByRole('button', { name: 'Baixar PDF atualizado' }).click()
+  expect((await freshPdf).suggestedFilename()).toBe('OS-0001-entrada.pdf')
+
+  // Apagar a assinatura da empresa e assinar de novo; a do cliente fica.
+  await page.getByRole('group', { name: 'Entrada: empresa' }).getByRole('button', { name: 'Apagar assinatura' }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Apagar assinatura' }).click()
+  await expect(page.getByText('A assinatura da empresa foi apagada.')).toBeVisible()
+  await expect(page.getByRole('img', { name: /Assinatura de Rafhael Santos/ })).toHaveCount(0)
+  await expect(page.getByRole('img', { name: 'Assinatura de Maria Souza' })).toBeVisible()
+  await page.getByRole('group', { name: 'Entrada: empresa' }).getByRole('button', { name: /Assinar como/ }).click()
+  await page.getByRole('button', { name: 'Confirmar assinatura' }).click()
+  await expect(page.getByRole('img', { name: /Assinatura de Rafhael Santos/ })).toBeVisible()
   await page.getByRole('button', { name: 'Mudar status' }).click()
   await page.getByRole('radio', { name: 'Cancelado' }).check()
   await expect(page.getByRole('button', { name: 'Confirmar mudança' })).toBeDisabled()

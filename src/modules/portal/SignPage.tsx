@@ -131,8 +131,12 @@ function SignContent({ token, doc, onSigned }: { token: string; doc: SignDoc; on
     setPdfBusy(true)
     setPdfError(null)
     try {
-      const input = toPdfInput(doc)
-      const bytes = await renderOrderPdf(input, { items: doc.items, totals: doc.totals, signatures: doc.signatures })
+      // Busca de novo: o PDF sai com as assinaturas do momento (inclusive a da empresa, se entrou depois).
+      const { data, error } = await requireSupabase().rpc('signature_view', { p_token: token })
+      if (error || !data) throw error ?? new Error('vazio')
+      const fresh = data as unknown as SignDoc
+      const input = toPdfInput(fresh)
+      const bytes = await renderOrderPdf(input, { items: fresh.items, totals: fresh.totals, signatures: fresh.signatures })
       downloadBytes(bytes, orderPdfFileName(input))
     } catch {
       setPdfError('Não foi possível gerar o PDF. Tente novamente.')
@@ -247,7 +251,12 @@ function SignContent({ token, doc, onSigned }: { token: string; doc: SignDoc; on
           <div className="grid justify-items-center gap-4 py-2 text-center">
             <CheckCircle2 className="size-12 text-ok-600 dark:text-ok-500" aria-hidden />
             <p className="text-sm">Obrigado! A sua assinatura foi registrada no {docTitle[doc.document].toLowerCase()} da {code}.</p>
-            <Button onClick={() => setSuccess(false)}>OK</Button>
+            <div className="flex flex-wrap justify-center gap-2">
+              <Button variant="secondary" loading={pdfBusy} onClick={() => void downloadPdf()}>
+                <Download className="size-4" aria-hidden /> Baixar PDF assinado
+              </Button>
+              <Button onClick={() => setSuccess(false)}>OK</Button>
+            </div>
           </div>
         </FormDialog>
       )}

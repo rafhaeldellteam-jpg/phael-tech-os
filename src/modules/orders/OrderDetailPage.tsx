@@ -277,6 +277,8 @@ export function OrderDetailPage() {
             userId={user?.id}
             userName={(user?.user_metadata?.full_name as string | undefined) ?? ''}
             canSign={can(['orders.update', 'orders.deliver'])}
+            onPdf={(kind) => void makePdf(kind)}
+            pdfBusy={pdfKind}
           />
 
         </div>

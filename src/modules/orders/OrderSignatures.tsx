@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Copy, Link2, Mail, MessageCircle, PenLine, ShieldCheck } from 'lucide-react'
+import { Copy, FileDown, Link2, Mail, MessageCircle, PenLine, ShieldCheck, Trash2 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Alert } from '@/components/ui/Alert'
 import { Button } from '@/components/ui/Button'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { TextField } from '@/components/ui/Field'
 import { FormDialog } from '@/components/ui/FormDialog'
 import { SignaturePad, type SignaturePadHandle } from '@/components/ui/SignaturePad'
@@ -105,6 +106,8 @@ export function OrderSignatures({
   userId,
   userName,
   canSign,
+  onPdf,
+  pdfBusy,
 }: {
   companyId: string
   orderId: string
@@ -117,6 +120,9 @@ export function OrderSignatures({
   userId: string | undefined
   userName: string
   canSign: boolean
+  /** Gera e baixa o PDF atual do documento (sempre com as assinaturas do momento). */
+  onPdf: (document: SignatureDocument) => void
+  pdfBusy: SignatureDocument | null
 }) {
   const queryClient = useQueryClient()
   const requests = useQuery({
@@ -146,6 +152,46 @@ export function OrderSignatures({
     void queryClient.invalidateQueries({ queryKey: orderKeys.events(companyId, orderId) })
   }, [clientSigned, companyId, orderId, queryClient])
 
+  // Avisa quando entra ou sai uma assinatura: o PDF gerado a partir daí já vem atualizado.
+  const known = useRef<Map<string, string> | null>(null)
+  const [updated, setUpdated] = useState<{ document: SignatureDocument; text: string } | null>(null)
+  useEffect(() => {
+    if (!signatures.data) return
+    const now = new Map(signatures.data.map((x) => [x.id, `${x.document}|${x.signer_role}|${x.signer_name}`]))
+    const before = known.current
+    known.current = now
+    if (!before) return
+    for (const [id, info] of now) {
+      if (!before.has(id)) {
+        const [doc, role, name] = info.split('|') as [SignatureDocument, SignatureRole, string]
+        setUpdated({ document: doc, text: `${role === 'client' ? 'O cliente' : 'A empresa'} assinou (${name}).` })
+        return
+      }
+    }
+    for (const [id, info] of before) {
+      if (!now.has(id)) {
+        const [doc] = info.split('|') as [SignatureDocument]
+        setUpdated({ document: doc, text: 'A assinatura da empresa foi apagada.' })
+        return
+      }
+    }
+  }, [signatures.data])
+
+  const [removing, setRemoving] = useState<SignatureDocument | null>(null)
+  const remove = useMutation({
+    mutationFn: async (document: SignatureDocument) => {
+      const { error } = await requireSupabase().rpc('remove_company_signature', { p_order_id: orderId, p_document: document })
+      if (error) throw error
+    },
+    onSuccess: async () => {
+      setRemoving(null)
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: signaturesKey(companyId, orderId) }),
+        queryClient.invalidateQueries({ queryKey: orderKeys.events(companyId, orderId) }),
+      ])
+    },
+  })
+
   const revoke = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await requireSupabase().rpc('revoke_signature_request', { p_request_id: id })
@@ -164,7 +210,20 @@ export function OrderSignatures({
           Assinatura eletrônica na tela ou por link enviado ao cliente. Entra no PDF do comprovante e não pode ser alterada depois.
         </p>
       </div>
-      {revoke.isError && <Alert tone="error">{toUserMessage(revoke.error)}</Alert>}
+      {(revoke.isError || remove.isError) && <Alert tone="error">{toUserMessage(revoke.error ?? remove.error)}</Alert>}
+      {updated && (
+        <Alert tone="success" title={`PDF do ${docName[updated.document]} atualizado`}>
+          <span className="flex flex-wrap items-center gap-2">
+            {updated.text}
+            <Button size="sm" variant="secondary" loading={pdfBusy === updated.document} onClick={() => onPdf(updated.document)}>
+              <FileDown className="size-4" aria-hidden /> Baixar PDF atualizado
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setUpdated(null)}>
+              Fechar
+            </Button>
+          </span>
+        </Alert>
+      )}
       {signatures.isPending ? (
         <Spinner label="Carregando assinaturas" />
       ) : signatures.isError ? (
@@ -175,7 +234,12 @@ export function OrderSignatures({
             const waiting = pending.find((r) => r.document === doc)
             return (
               <div key={doc} className="grid gap-2">
-                <h3 className="text-sm font-semibold text-muted">{docLabel[doc]}</h3>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h3 className="text-sm font-semibold text-muted">{docLabel[doc]}</h3>
+                  <Button size="sm" variant="ghost" loading={pdfBusy === doc} onClick={() => onPdf(doc)}>
+                    <FileDown className="size-4" aria-hidden /> PDF {docLabel[doc].toLowerCase()} ({signatures.data.filter((x) => x.document === doc).length}/2 assinaturas)
+                  </Button>
+                </div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   {(['client', 'company'] as const).map((role) => {
                     const sig = signatures.data.find((s) => s.document === doc && s.signer_role === role)
@@ -195,6 +259,11 @@ export function OrderSignatures({
                               Assinado em {formatDateTime(sig.signed_at)}
                               {sig.channel === 'remote_link' && ' pelo link'}
                             </span>
+                            {role === 'company' && canSign && (
+                              <Button size="sm" variant="ghost" className="justify-self-start text-danger-600" onClick={() => setRemoving(doc)}>
+                                <Trash2 className="size-4" aria-hidden /> Apagar assinatura
+                              </Button>
+                            )}
                           </>
                         ) : !canSign ? (
                           <span className="text-muted">Pendente</span>
@@ -243,6 +312,15 @@ export function OrderSignatures({
           })}
         </div>
       )}
+      <ConfirmDialog
+        open={removing !== null}
+        onOpenChange={(o) => !o && setRemoving(null)}
+        title="Apagar a assinatura da empresa?"
+        description={`A assinatura de ${companyName} sai do ${removing ? docName[removing] : 'documento'} e do PDF. Você pode assinar de novo depois. A remoção fica registrada no histórico da OS.`}
+        confirmLabel="Apagar assinatura"
+        loading={remove.isPending}
+        onConfirm={() => removing && remove.mutate(removing)}
+      />
       {signing && (
         <SignDialog
           companyId={companyId}
@@ -426,6 +504,16 @@ function SignDialog({
   const [empty, setEmpty] = useState(true)
   const [agree, setAgree] = useState(isCompany)
   const drawing = source === 'draw'
+  const deleteSaved = useMutation({
+    mutationFn: async () => {
+      const { error } = await requireSupabase().rpc('delete_my_signature', { p_company_id: companyId })
+      if (error) throw error
+    },
+    onSuccess: async () => {
+      if (source === 'saved') pick('official')
+      await queryClient.invalidateQueries({ queryKey: ['my-signature', companyId] })
+    },
+  })
 
   const pick = (s: CompanySource) => {
     setSource(s)
@@ -491,7 +579,15 @@ function SignDialog({
           <fieldset className="grid gap-2">
             <legend className="mb-1 text-sm font-medium">Assinatura</legend>
             {option('official', 'Assinatura oficial (Rafhael Santos)', OFFICIAL_SIGNATURE_URL)}
-            {saved.data && option('saved', 'Minha assinatura salva', saved.data.image_data)}
+            {saved.data && (
+              <div className="grid gap-1">
+                {option('saved', 'Minha assinatura salva', saved.data.image_data)}
+                <Button size="sm" variant="ghost" className="justify-self-end text-danger-600" loading={deleteSaved.isPending} onClick={() => deleteSaved.mutate()}>
+                  <Trash2 className="size-4" aria-hidden /> Apagar assinatura salva
+                </Button>
+              </div>
+            )}
+            {deleteSaved.isError && <Alert tone="error">{toUserMessage(deleteSaved.error)}</Alert>}
             {option('draw', 'Desenhar agora')}
           </fieldset>
         )}
