@@ -8,6 +8,8 @@ test.skip(!process.env.E2E_SUPABASE, 'Defina E2E_SUPABASE=1 com o Supabase local
 // Sistema de uso exclusivo: só a primeira empresa pode ser criada, então este fluxo
 // roda uma vez por banco limpo e não pode ser repetido automaticamente.
 test.describe.configure({ retries: 0 })
+// Fluxo longo (cadastro até assinatura remota e Provision): mais tempo que o padrão de 30 s.
+test.setTimeout(180_000)
 
 test('cadastro, criação de empresa, convite e auditoria', async ({ page }, testInfo) => {
   const stamp = `${Date.now()}-${testInfo.project.name}`
