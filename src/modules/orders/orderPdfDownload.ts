@@ -28,10 +28,16 @@ export interface OrderPdfInput {
   warranties: { description: string; warranty_days: number; expires_on: string }[]
 }
 
-/** Busca itens e totais atuais, monta o PDF com o logo e baixa o arquivo. */
+export interface OrderPdfParts {
+  items: { kind: 'service' | 'part'; description: string; qty: number; unit_price_cents: number; discount_cents: number }[]
+  totals: { services_cents: number; parts_cents: number; discount_cents: number; total_cents: number } | null
+  signatures: { signer_role: 'client' | 'company'; signer_name: string; image_data: string; signed_at: string; channel?: string | null }[]
+}
+
+/** Busca itens, totais e assinaturas atuais, monta o PDF com o logo e baixa o arquivo. */
 export async function downloadOrderPdf(input: OrderPdfInput): Promise<void> {
   const sb = requireSupabase()
-  const [items, totals, logo, sigs] = await Promise.all([
+  const [items, totals, sigs] = await Promise.all([
     sb
       .from('service_order_items')
       .select('kind, description, qty, unit_price_cents, discount_cents, returned_at, created_at')
@@ -39,19 +45,30 @@ export async function downloadOrderPdf(input: OrderPdfInput): Promise<void> {
       .is('returned_at', null)
       .order('created_at'),
     sb.rpc('service_order_totals', { p_order_id: input.order.id }),
-    loadLogoJpeg('/brand/phael-logo.webp', NAVY),
-    sb.from('order_signatures').select('signer_role, signer_name, image_data, signed_at').eq('order_id', input.order.id).eq('document', input.kind),
+    sb.from('order_signatures').select('signer_role, signer_name, image_data, signed_at, channel').eq('order_id', input.order.id).eq('document', input.kind),
   ])
-  if (sigs.error) throw sigs.error
-  const signed = async (role: 'client' | 'company'): Promise<SignedImage | undefined> => {
-    const s = (sigs.data ?? []).find((x) => x.signer_role === role)
-    if (!s) return undefined
-    return { image: await loadLogoJpeg(s.image_data, [255, 255, 255], 1), name: s.signer_name, signedAt: formatDateTime(s.signed_at) }
-  }
-  const [clientSig, companySig] = await Promise.all([signed('client'), signed('company')])
   if (items.error) throw items.error
   if (totals.error) throw totals.error
-  const t = totals.data?.[0]
+  if (sigs.error) throw sigs.error
+  const bytes = await renderOrderPdf(input, { items: items.data ?? [], totals: totals.data?.[0] ?? null, signatures: sigs.data ?? [] })
+  downloadBytes(bytes, orderPdfFileName(input))
+}
+
+export function orderPdfFileName(input: Pick<OrderPdfInput, 'kind' | 'order'>): string {
+  return `${formatCode('OS', input.order.number)}-${input.kind === 'intake' ? 'entrada' : 'entrega'}.pdf`
+}
+
+/** Monta o PDF (também usado na página pública de assinatura). */
+export async function renderOrderPdf(input: OrderPdfInput, parts: OrderPdfParts): Promise<Uint8Array> {
+  const logo = await loadLogoJpeg('/brand/phael-logo.webp', NAVY)
+  const signed = async (role: 'client' | 'company'): Promise<SignedImage | undefined> => {
+    const s = parts.signatures.find((x) => x.signer_role === role)
+    if (!s) return undefined
+    const when = formatDateTime(s.signed_at)
+    return { image: await loadLogoJpeg(s.image_data, [255, 255, 255], 1), name: s.signer_name, signedAt: s.channel === 'remote_link' ? `${when} (pelo link)` : when }
+  }
+  const [clientSig, companySig] = await Promise.all([signed('client'), signed('company')])
+  const t = parts.totals
   const c = input.company
   const code = formatCode('OS', input.order.number)
 
@@ -77,7 +94,7 @@ export async function downloadOrderPdf(input: OrderPdfInput): Promise<void> {
       },
       client: { name: input.client.name, contact: formatPhone(input.client.whatsapp ?? input.client.phone) || input.client.email },
       equipment: { title: input.equipmentTitle, serial: input.serial },
-      items: (items.data ?? []).map((i) => ({
+      items: parts.items.map((i) => ({
         description: i.description,
         qty: i.qty,
         unitCents: i.unit_price_cents,
@@ -92,5 +109,5 @@ export async function downloadOrderPdf(input: OrderPdfInput): Promise<void> {
     },
     { header: logo, footer: logo },
   )
-  downloadBytes(bytes, `${code}-${input.kind === 'intake' ? 'entrada' : 'entrega'}.pdf`)
+  return bytes
 }

@@ -75,3 +75,10 @@ Pendências de processo para o controlador (Phael Tech Support):
 - Funções anônimas: `portal_order` (leitura de uma OS, campos selecionados) e `portal_decide`
   (aprovar/recusar orçamento, só em `awaiting_approval`, com nome do cliente na linha do tempo).
 
+## Assinatura do cliente pelo link
+- Mesmo modelo de token (32 bytes, só o SHA-256 no banco), validade de 1 a 30 dias, revogável.
+- Funções anônimas: `signature_view` (o comprovante com itens, totais, termos e assinaturas; sem custos,
+  notas internas, senha do equipamento nem documento do cliente) e `sign_by_link`.
+- Assina uma única vez: índice único por OS, documento e papel; a tentativa seguinte falha com 23505
+  e a assinatura é imutável. Registramos canal (`remote_link`), IP e navegador de quem assinou.
+

@@ -924,6 +924,28 @@ export interface Database {
           image_sha256: string
           recorded_by: string | null
           signed_at: Timestamp
+          channel: 'in_person' | 'remote_link'
+          signer_ip: string | null
+          signer_user_agent: string | null
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      signature_requests: {
+        Row: {
+          id: string
+          company_id: string
+          order_id: string
+          document: SignatureDocument
+          expires_at: Timestamp
+          revoked_at: Timestamp | null
+          signed_at: Timestamp | null
+          signature_id: string | null
+          view_count: number
+          last_viewed_at: Timestamp | null
+          created_by: string | null
+          created_at: Timestamp
         }
         Insert: never
         Update: never
@@ -1310,6 +1332,13 @@ export interface Database {
         Args: { p_order_id: string; p_document: SignatureDocument; p_role: SignatureRole; p_signer_name: string; p_image_data: string }
         Returns: string
       }
+      create_signature_request: {
+        Args: { p_order_id: string; p_document: SignatureDocument; p_days?: number }
+        Returns: { request_id: string; token: string; expires_at: Timestamp }[]
+      }
+      revoke_signature_request: { Args: { p_request_id: string }; Returns: undefined }
+      signature_view: { Args: { p_token: string }; Returns: Json }
+      sign_by_link: { Args: { p_token: string; p_signer_name: string; p_image_data: string }; Returns: Timestamp }
       save_my_signature: { Args: { p_company_id: string; p_signer_name: string; p_image_data: string }; Returns: undefined }
       save_digital_service: { Args: { p_company_id: string; p_id: string | null; p_data: Json }; Returns: string }
       save_contract: { Args: { p_company_id: string; p_id: string | null; p_data: Json }; Returns: string }

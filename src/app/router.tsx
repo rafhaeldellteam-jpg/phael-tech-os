@@ -36,6 +36,7 @@ import { ChargePage } from '@/modules/finance/ChargePage'
 import { ChecklistTemplatesPage } from '@/modules/diagnostics/ChecklistTemplatesPage'
 import { QuotesPage } from '@/modules/quotes/QuotesPage'
 import { PortalPage } from '@/modules/portal/PortalPage'
+import { SignPage } from '@/modules/portal/SignPage'
 import { ReportsPage } from '@/modules/reports/ReportsPage'
 import { SchedulePage } from '@/modules/schedule/SchedulePage'
 import { WarrantiesPage } from '@/modules/warranties/WarrantiesPage'
@@ -60,6 +61,7 @@ export const router = createBrowserRouter([
   // Portal do cliente: público, autorizado só pelo token do link.
   { path: '/acompanhar/:token', element: <PortalPage /> },
   { path: '/cobranca/:token', element: <ChargePage /> },
+  { path: '/assinar/:token', element: <SignPage /> },
   {
     element: <RequireAuth />,
     children: [

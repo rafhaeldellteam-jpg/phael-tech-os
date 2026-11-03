@@ -268,8 +268,11 @@ export function OrderDetailPage() {
           <OrderSignatures
             companyId={company.id}
             orderId={o.id}
+            orderNumber={o.number}
             delivered={Boolean(o.delivered_at)}
             clientName={o.client.name}
+            clientPhone={o.client.whatsapp ?? o.client.phone}
+            clientEmail={o.client.email}
             companyName={companyDetails.data?.name ?? company.name}
             userId={user?.id}
             userName={(user?.user_metadata?.full_name as string | undefined) ?? ''}

@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs'
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 
 // Fluxo completo contra um Supabase local real (supabase start).
 // Requer confirmação de e-mail desligada (padrão do ambiente local).
@@ -110,19 +110,42 @@ test('cadastro, criação de empresa, convite e auditoria', async ({ page }, tes
   await expect(page.getByRole('heading', { name: /OS-0001/ })).toBeVisible()
   await page.goto(backTo)
 
-  // Assinatura eletrônica do cliente no comprovante de entrada.
-  await page.getByRole('button', { name: 'Colher assinatura do cliente' }).click()
-  const signatureBox = page.getByRole('img', { name: /área para desenhar a assinatura/ })
-  const box = await signatureBox.boundingBox()
-  if (!box) throw new Error('quadro de assinatura não encontrado')
-  await page.mouse.move(box.x + 30, box.y + box.height / 2)
-  await page.mouse.down()
-  for (let i = 1; i <= 20; i++) await page.mouse.move(box.x + 30 + i * 12, box.y + box.height / 2 + Math.sin(i) * 25)
-  await page.mouse.up()
-  await page.getByRole('checkbox', { name: /Confirmo que entreguei o equipamento/ }).check()
+  // Assinaturas do comprovante de entrada: empresa com a assinatura oficial; cliente pelo link, uma única vez.
+  await page.getByRole('group', { name: 'Entrada: empresa' }).getByRole('button', { name: /Assinar como/ }).click()
+  await expect(page.getByRole('radio', { name: /Assinatura oficial/ })).toBeChecked()
   await page.getByRole('button', { name: 'Confirmar assinatura' }).click()
-  await expect(page.getByRole('img', { name: 'Assinatura de Maria Souza' })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Colher assinatura do cliente' })).toHaveCount(0)
+  await expect(page.getByRole('img', { name: /Assinatura de Rafhael Santos/ })).toBeVisible()
+  await page.getByRole('group', { name: 'Entrada: cliente' }).getByRole('button', { name: 'Enviar link para o cliente assinar' }).click()
+  await page.getByRole('button', { name: 'Gerar link' }).click()
+  const signUrl = await page.getByLabel('Link de assinatura').inputValue()
+  expect(signUrl).toMatch(/\/assinar\/[A-Za-z0-9_-]{43}$/)
+  await page.getByRole('button', { name: 'Concluir' }).click()
+  await expect(page.getByText('Aguardando a assinatura do cliente pelo link')).toBeVisible()
+
+  const signer = await browser.newContext()
+  const sp = await signer.newPage()
+  await sp.goto(signUrl)
+  await expect(sp.getByRole('heading', { name: /Comprovante de entrada · OS-0001/ })).toBeVisible()
+  await expect(sp.getByRole('img', { name: /Assinatura de Rafhael Santos/ })).toBeVisible()
+  await drawSignature(sp)
+  await sp.getByRole('checkbox', { name: /Confirmo que entreguei o equipamento/ }).check()
+  await sp.getByRole('button', { name: 'Enviar assinatura' }).click()
+  const done = sp.getByRole('dialog', { name: 'Assinatura enviada com sucesso' })
+  await expect(done).toBeVisible()
+  await done.getByRole('button', { name: 'OK' }).click()
+  await expect(sp.getByText('Documento assinado', { exact: true })).toBeVisible()
+  await expect(sp.getByRole('button', { name: 'Enviar assinatura' })).toHaveCount(0)
+  const pdf = sp.waitForEvent('download')
+  await sp.getByRole('button', { name: 'Baixar documento assinado (PDF)' }).click()
+  expect((await pdf).suggestedFilename()).toBe('OS-0001-entrada.pdf')
+  await sp.reload()
+  await expect(sp.getByText('Documento assinado', { exact: true })).toBeVisible()
+  await expect(sp.getByRole('button', { name: 'Enviar assinatura' })).toHaveCount(0)
+  await signer.close()
+
+  // A assinatura do cliente aparece sozinha para a equipe.
+  await expect(page.getByRole('img', { name: 'Assinatura de Maria Souza' })).toBeVisible({ timeout: 20_000 })
+  await expect(page.getByRole('button', { name: 'Enviar link para o cliente assinar' })).toHaveCount(0)
   await page.getByRole('button', { name: 'Mudar status' }).click()
   await page.getByRole('radio', { name: 'Cancelado' }).check()
   await expect(page.getByRole('button', { name: 'Confirmar mudança' })).toBeDisabled()
@@ -354,3 +377,12 @@ test('cadastro, criação de empresa, convite e auditoria', async ({ page }, tes
   await expect(prov.getByRole('listitem')).toHaveCount(1)
   await expect(prov.getByText(/DESKTOP-E2E01/)).toBeVisible()
 })
+
+async function drawSignature(p: Page) {
+  const box = await p.getByRole('img', { name: /área para desenhar a assinatura/ }).boundingBox()
+  if (!box) throw new Error('quadro de assinatura não encontrado')
+  await p.mouse.move(box.x + 30, box.y + box.height / 2)
+  await p.mouse.down()
+  for (let i = 1; i <= 20; i++) await p.mouse.move(box.x + 30 + i * 12, box.y + box.height / 2 + Math.sin(i) * 25)
+  await p.mouse.up()
+}

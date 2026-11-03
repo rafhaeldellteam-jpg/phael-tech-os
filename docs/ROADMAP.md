@@ -37,6 +37,13 @@
 - Indicadores reais no painel (em andamento, diagnóstico, aguardando aprovação/peça, em reparo, prontas, atrasadas).
 - Sistema travado para uso exclusivo de uma empresa (novas contas só por convite).
 
+### Entregue: assinatura do cliente à distância
+- Em Assinaturas da OS: "Assinar como Phael Tech Support" com a assinatura oficial (Rafhael Santos),
+  a assinatura salva ou desenhada; e "Enviar link para o cliente assinar" (WhatsApp, e-mail ou copiar).
+- Página pública `/assinar/<token>`: o cliente confere o comprovante, assina na tela, envia e vê
+  "Assinatura enviada com sucesso". Depois não dá para assinar de novo; ele pode baixar o PDF assinado.
+- A assinatura aparece sozinha na OS (atualiza a cada 10 s enquanto há link pendente) e entra no PDF.
+
 ### Próximos incrementos
 Ordem sugerida, cada item com migração + testes SQL + telas + testes:
 4. Diagnósticos e checklists (inicial/final, evidências, comparação).
