@@ -381,7 +381,9 @@ test('cadastro, criação de empresa, convite e auditoria', async ({ page }, tes
 })
 
 async function drawSignature(p: Page) {
-  const box = await p.getByRole('img', { name: /área para desenhar a assinatura/ }).boundingBox()
+  const pad = p.getByRole('img', { name: /área para desenhar a assinatura/ })
+  await pad.scrollIntoViewIfNeeded()
+  const box = await pad.boundingBox()
   if (!box) throw new Error('quadro de assinatura não encontrado')
   await p.mouse.move(box.x + 30, box.y + box.height / 2)
   await p.mouse.down()
