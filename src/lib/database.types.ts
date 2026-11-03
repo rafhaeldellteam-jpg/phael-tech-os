@@ -1337,7 +1337,7 @@ export interface Database {
         Returns: { request_id: string; token: string; expires_at: Timestamp }[]
       }
       revoke_signature_request: { Args: { p_request_id: string }; Returns: undefined }
-      remove_company_signature: { Args: { p_order_id: string; p_document: SignatureDocument }; Returns: undefined }
+      remove_order_signature: { Args: { p_order_id: string; p_document: SignatureDocument; p_role: SignatureRole }; Returns: undefined }
       delete_my_signature: { Args: { p_company_id: string }; Returns: undefined }
       signature_view: { Args: { p_token: string }; Returns: Json }
       sign_by_link: { Args: { p_token: string; p_signer_name: string; p_image_data: string }; Returns: Timestamp }

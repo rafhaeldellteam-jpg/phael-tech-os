@@ -170,23 +170,24 @@ export function OrderSignatures({
     }
     for (const [id, info] of before) {
       if (!now.has(id)) {
-        const [doc] = info.split('|') as [SignatureDocument]
-        setUpdated({ document: doc, text: 'A assinatura da empresa foi apagada.' })
+        const [doc, role] = info.split('|') as [SignatureDocument, SignatureRole]
+        setUpdated({ document: doc, text: role === 'client' ? 'A assinatura do cliente foi apagada.' : 'A assinatura da empresa foi apagada.' })
         return
       }
     }
   }, [signatures.data])
 
-  const [removing, setRemoving] = useState<SignatureDocument | null>(null)
+  const [removing, setRemoving] = useState<{ document: SignatureDocument; role: SignatureRole } | null>(null)
   const remove = useMutation({
-    mutationFn: async (document: SignatureDocument) => {
-      const { error } = await requireSupabase().rpc('remove_company_signature', { p_order_id: orderId, p_document: document })
+    mutationFn: async (r: { document: SignatureDocument; role: SignatureRole }) => {
+      const { error } = await requireSupabase().rpc('remove_order_signature', { p_order_id: orderId, p_document: r.document, p_role: r.role })
       if (error) throw error
     },
     onSuccess: async () => {
       setRemoving(null)
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: signaturesKey(companyId, orderId) }),
+        queryClient.invalidateQueries({ queryKey: requestsKey(companyId, orderId) }),
         queryClient.invalidateQueries({ queryKey: orderKeys.events(companyId, orderId) }),
       ])
     },
@@ -259,8 +260,8 @@ export function OrderSignatures({
                               Assinado em {formatDateTime(sig.signed_at)}
                               {sig.channel === 'remote_link' && ' pelo link'}
                             </span>
-                            {role === 'company' && canSign && (
-                              <Button size="sm" variant="ghost" className="justify-self-start text-danger-600" onClick={() => setRemoving(doc)}>
+                            {canSign && (
+                              <Button size="sm" variant="ghost" className="justify-self-start text-danger-600" onClick={() => setRemoving({ document: doc, role })}>
                                 <Trash2 className="size-4" aria-hidden /> Apagar assinatura
                               </Button>
                             )}
@@ -315,8 +316,12 @@ export function OrderSignatures({
       <ConfirmDialog
         open={removing !== null}
         onOpenChange={(o) => !o && setRemoving(null)}
-        title="Apagar a assinatura da empresa?"
-        description={`A assinatura de ${companyName} sai do ${removing ? docName[removing] : 'documento'} e do PDF. Você pode assinar de novo depois. A remoção fica registrada no histórico da OS.`}
+        title={removing?.role === 'client' ? 'Apagar a assinatura do cliente?' : 'Apagar a assinatura da empresa?'}
+        description={
+          removing?.role === 'client'
+            ? `A assinatura de ${clientName} sai do ${docName[removing.document]} e do PDF, e os links de assinatura enviados para este documento deixam de funcionar. Para pedir de novo, envie um link novo ou colha aqui. A remoção fica registrada no histórico da OS.`
+            : `A assinatura de ${companyName} sai do ${removing ? docName[removing.document] : 'documento'} e do PDF. Você pode assinar de novo depois. A remoção fica registrada no histórico da OS.`
+        }
         confirmLabel="Apagar assinatura"
         loading={remove.isPending}
         onConfirm={() => removing && remove.mutate(removing)}

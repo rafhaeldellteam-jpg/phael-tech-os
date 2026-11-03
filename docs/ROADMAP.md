@@ -43,7 +43,8 @@
 - Página pública `/assinar/<token>`: o cliente confere o comprovante, assina na tela, envia e vê
   "Assinatura enviada com sucesso". Depois não dá para assinar de novo; ele pode baixar o PDF assinado.
 - A assinatura aparece sozinha na OS (atualiza a cada 10 s enquanto há link pendente) e entra no PDF.
-- "Apagar assinatura" da empresa (para assinar de novo) e "Apagar assinatura salva"; a do cliente é permanente.
+- "Apagar assinatura" do cliente ou da empresa (para pedir ou assinar de novo), com registro e SHA-256 no
+  histórico; apagar a do cliente cancela os links enviados. Também "Apagar assinatura salva".
 - O PDF é sempre gerado com as assinaturas do momento; quando entra ou sai uma assinatura, a OS avisa
   "PDF atualizado" com o botão para baixar. O cliente também baixa o PDF atualizado pelo link.
 

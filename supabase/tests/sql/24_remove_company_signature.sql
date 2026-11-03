@@ -21,9 +21,9 @@ select public.sign_order(:'os', 'intake', 'company', 'Rafhael Santos', :'png');
 select public.sign_order(:'os', 'intake', 'client', 'Cliente Um', :'png');
 
 select tests.login('00000000-0000-0000-0000-0000000000a3');
-select tests.throws(format('select public.remove_company_signature(%L, %L)', :'os', 'intake'), '42501', 'financeiro não apaga assinatura');
+select tests.throws(format('select public.remove_order_signature(%L, %L, %L)', :'os', 'intake', 'company'), '42501', 'financeiro não apaga assinatura');
 select tests.login('00000000-0000-0000-0000-0000000000b1');
-select tests.throws(format('select public.remove_company_signature(%L, %L)', :'os', 'intake'), 'P0002', 'outra empresa não apaga');
+select tests.throws(format('select public.remove_order_signature(%L, %L, %L)', :'os', 'intake', 'company'), 'P0002', 'outra empresa não apaga');
 
 reset role;
 select tests.throws(format($q$delete from public.order_signatures where order_id = %L and signer_role = 'company'$q$, :'os'), '42501', 'nem o dono do banco apaga direto');
@@ -31,12 +31,12 @@ select tests.throws(format($q$delete from public.order_signatures where order_id
 
 select tests.login('00000000-0000-0000-0000-0000000000a1');
 select tests.throws(format($q$delete from public.order_signatures where order_id = %L$q$, :'os'), '42501', 'equipe não apaga pela tabela');
-select public.remove_company_signature(:'os', 'intake');
+select public.remove_order_signature(:'os', 'intake', 'company');
 select tests.ok((select count(*) from public.order_signatures where order_id = :'os' and signer_role = 'company') = 0, 'assinatura da empresa apagada');
 select tests.ok((select count(*) from public.order_signatures where order_id = :'os' and signer_role = 'client') = 1, 'assinatura do cliente mantida');
 select tests.ok(exists (select 1 from public.service_order_events where order_id = :'os' and note like 'Assinatura da empresa apagada do comprovante de entrada (era de Rafhael Santos%'), 'linha do tempo registra');
 select tests.ok(exists (select 1 from public.audit_log where entity = 'order_signatures' and action = 'delete'), 'auditoria registra');
-select tests.throws(format('select public.remove_company_signature(%L, %L)', :'os', 'intake'), 'P0002', 'sem assinatura para apagar');
+select tests.throws(format('select public.remove_order_signature(%L, %L, %L)', :'os', 'intake', 'company'), 'P0002', 'sem assinatura para apagar');
 select public.sign_order(:'os', 'intake', 'company', 'Rafhael Santos', :'png');
 select tests.ok((select count(*) from public.order_signatures where order_id = :'os' and signer_role = 'company') = 1, 'pode assinar de novo');
 reset role;
