@@ -2,14 +2,16 @@ import { useSearchParams } from 'react-router'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Tabs } from '@/components/ui/Tabs'
 import { useActiveCompany, useCompany } from '@/core/company/useCompany'
+import { DebtorsPanel } from './DebtorsPanel'
 import { EntriesTab } from './EntriesTab'
 import { ReconcileTab } from './ReconcileTab'
 import { SettingsTab } from './SettingsTab'
 import { SummaryTab } from './SummaryTab'
 
-type TabKey = 'resumo' | 'receber' | 'pagar' | 'conciliacao' | 'configuracoes'
+type TabKey = 'resumo' | 'devendo' | 'receber' | 'pagar' | 'conciliacao' | 'configuracoes'
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'resumo', label: 'Resumo' },
+  { key: 'devendo', label: 'Clientes devendo' },
   { key: 'receber', label: 'A receber' },
   { key: 'pagar', label: 'A pagar' },
   { key: 'conciliacao', label: 'Conciliação' },
@@ -28,6 +30,7 @@ export function FinancePage() {
       <PageHeader title="Financeiro" description="Valores em centavos, sem arredondamento. Nada é apagado: cancelamentos e estornos ficam registrados." />
       <Tabs label="Seções do financeiro" items={TABS} value={tab} onChange={(k) => setParams(k === 'resumo' ? {} : { aba: k }, { replace: true })} />
       {tab === 'resumo' && <SummaryTab companyId={company.id} />}
+      {tab === 'devendo' && <DebtorsPanel companyId={company.id} />}
       {tab === 'receber' && <EntriesTab key="in" companyId={company.id} direction="in" canWrite={canWrite} />}
       {tab === 'pagar' && <EntriesTab key="out" companyId={company.id} direction="out" canWrite={canWrite} />}
       {tab === 'conciliacao' && <ReconcileTab companyId={company.id} canWrite={canWrite} />}

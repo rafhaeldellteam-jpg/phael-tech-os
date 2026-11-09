@@ -380,6 +380,38 @@ test('cadastro, criação de empresa, convite e auditoria', async ({ page }, tes
   await page.goto('/conhecimento')
   await expect(page.getByText('Módulo ainda não disponível')).toBeVisible()
 
+  // Clientes devendo (em Orçamentos): cobrança em 3x no cartão, marcar parcela, desmarcar e quitar tudo.
+  await page.goto('/orcamentos?aba=devendo')
+  await page.getByRole('button', { name: 'Nova cobrança' }).click()
+  const nd = page.getByRole('dialog')
+  await nd.getByRole('combobox', { name: 'Cliente' }).fill('maria')
+  await page.getByRole('option', { name: /Maria Souza/ }).click()
+  await nd.getByLabel('Descrição').fill('Troca de tela parcelada')
+  await nd.getByLabel('Valor total (R$)').fill('300,00')
+  await nd.getByLabel('Parcelas').fill('3')
+  await nd.getByLabel('Forma de pagamento combinada').selectOption('credit')
+  await nd.getByRole('button', { name: 'Lançar' }).click()
+  await expect(nd).toBeHidden()
+  const debt = page.getByRole('group', { name: 'Cobrança: Troca de tela parcelada' })
+  await expect(debt.getByText('Parcelado em 3x')).toBeVisible()
+  await expect(debt.getByLabel('Forma de pagamento de Troca de tela parcelada')).toHaveValue('credit')
+  const parcela1 = debt.getByRole('listitem', { name: /Parcela 1\/3/ })
+  await parcela1.getByRole('button', { name: 'Marcar como paga' }).click()
+  await expect(page.getByRole('dialog').getByLabel('Como foi pago')).toHaveValue('credit')
+  await page.getByRole('button', { name: 'Confirmar pagamento' }).click()
+  await expect(parcela1.getByText('Paga', { exact: true })).toBeVisible()
+  await expect(parcela1.getByText(/paga em .*\(Cartão de crédito\)/)).toBeVisible()
+  await expect(debt.getByText(/1 de 3 pagas/)).toBeVisible()
+  await parcela1.getByRole('button', { name: 'Desmarcar' }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Desmarcar' }).click()
+  await expect(parcela1.getByRole('button', { name: 'Marcar como paga' })).toBeVisible()
+  await debt.getByRole('button', { name: 'Marcar tudo como pago' }).click()
+  await page.getByRole('dialog').getByLabel('Como foi pago').selectOption('pix')
+  await page.getByRole('button', { name: 'Confirmar pagamento' }).click()
+  await expect(debt).toHaveCount(0)
+  await page.getByLabel('Mostrar').selectOption('all')
+  await expect(page.getByRole('group', { name: 'Cobrança: Troca de tela parcelada' }).getByText(/3 de 3 pagas/)).toBeVisible()
+
   // Provision: relatório .txt importado cria a ficha; reimportar atualiza sem duplicar.
   const report = [
     'PHAEL TECH PROVISION — Relatório de provisionamento (29/10/2026 14:35)',

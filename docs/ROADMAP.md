@@ -48,6 +48,13 @@
 - O PDF é sempre gerado com as assinaturas do momento; quando entra ou sai uma assinatura, a OS avisa
   "PDF atualizado" com o botão para baixar. O cliente também baixa o PDF atualizado pelo link.
 
+### Entregue: clientes devendo
+- Em Orçamentos › "Clientes devendo" (e em Financeiro): quem deve, quanto, quanto já venceu e lembrete
+  pelo WhatsApp; cada cobrança mostra se é à vista ou parcelada (Nx), a forma combinada (Pix, cartão…),
+  e cada parcela com vencimento, valor e quando/como foi paga.
+- "Marcar como paga" (uma parcela) e "Marcar tudo como pago" (forma, data e conta); "Desmarcar" vira um
+  estorno registrado. Nova cobrança com cliente, parcelas e forma de pagamento combinada.
+
 ### Próximos incrementos
 Ordem sugerida, cada item com migração + testes SQL + telas + testes:
 4. Diagnósticos e checklists (inicial/final, evidências, comparação).

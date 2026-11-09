@@ -648,6 +648,7 @@ export interface Database {
           installment_no: number
           installment_count: number
           group_id: string
+          payment_method: PaymentMethod | null
           notes: string | null
           canceled_at: Timestamp | null
           cancel_reason: string | null
@@ -1337,6 +1338,32 @@ export interface Database {
         Returns: { request_id: string; token: string; expires_at: Timestamp }[]
       }
       revoke_signature_request: { Args: { p_request_id: string }; Returns: undefined }
+      set_entry_group_method: { Args: { p_group_id: string; p_method: PaymentMethod }; Returns: undefined }
+      receivables_by_client: {
+        Args: { p_company_id: string; p_only_open?: boolean }
+        Returns: {
+          group_id: string
+          client_id: string | null
+          client_name: string | null
+          client_phone: string | null
+          order_id: string | null
+          order_number: number | null
+          description: string
+          payment_method: PaymentMethod | null
+          installment_count: number
+          total_cents: number
+          paid_cents: number
+          open_cents: number
+          overdue_cents: number
+          paid_installments: number
+          next_due: string | null
+          first_issue: string
+          installments: Json
+        }[]
+      }
+      pay_installment: { Args: { p_entry_id: string; p_data: Json }; Returns: string }
+      pay_entry_group: { Args: { p_group_id: string; p_data: Json }; Returns: number }
+      unpay_installment: { Args: { p_entry_id: string; p_reason?: string }; Returns: number }
       remove_order_signature: { Args: { p_order_id: string; p_document: SignatureDocument; p_role: SignatureRole }; Returns: undefined }
       delete_my_signature: { Args: { p_company_id: string }; Returns: undefined }
       signature_view: { Args: { p_token: string }; Returns: Json }

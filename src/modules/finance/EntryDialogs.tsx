@@ -11,6 +11,7 @@ import type { FinanceDirection, Json, PaymentMethod } from '@/lib/database.types
 import { toUserMessage } from '@/lib/errors'
 import { centsToInput, formatBRL, parseMoney } from '@/lib/money'
 import { requireSupabase } from '@/lib/supabase'
+import { ClientPicker, type PickedClient } from '../clients/ClientPicker'
 import { ChargeEmailDialog } from './ChargeEmail'
 import { previewInstallments } from './installments'
 import { formatIsoDate, isoDate } from './period'
@@ -29,7 +30,7 @@ export function NewEntryDialog({
 }: {
   companyId: string
   direction: FinanceDirection
-  preset?: { description?: string; amountCents?: number; orderId?: string; purchaseId?: string }
+  preset?: { description?: string; amountCents?: number; orderId?: string; purchaseId?: string; client?: PickedClient }
   onClose: () => void
 }) {
   const invalidate = useInvalidateFinance(companyId)
@@ -42,6 +43,9 @@ export function NewEntryDialog({
   const [installments, setInstallments] = useState('1')
   const [intervalDays, setIntervalDays] = useState('0')
   const [notes, setNotes] = useState('')
+  const [client, setClient] = useState<PickedClient | null>(preset?.client ?? null)
+  const [method, setMethod] = useState<PaymentMethod | ''>(direction === 'in' ? 'pix' : '')
+  const pickClient = direction === 'in' && !preset?.orderId
   const [touched, setTouched] = useState(false)
 
   const cents = parseMoney(amount)
@@ -70,6 +74,8 @@ export function NewEntryDialog({
           notes,
           order_id: preset?.orderId ?? '',
           purchase_id: preset?.purchaseId ?? '',
+          client_id: pickClient ? (client?.id ?? '') : '',
+          payment_method: method,
         } as Json,
       })
       if (error) throw error
@@ -93,6 +99,7 @@ export function NewEntryDialog({
         }}
       >
         {create.isError && <Alert tone="error">{toUserMessage(create.error)}</Alert>}
+        {pickClient && <ClientPicker companyId={companyId} value={client} onChange={setClient} />}
         <TextField label="Descrição" value={description} onChange={(e) => setDescription(e.target.value)} error={touched ? errors.description : undefined} />
         <div className="grid gap-4 sm:grid-cols-2">
           <TextField label="Valor total (R$)" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} error={touched ? errors.amount : undefined} />
@@ -109,6 +116,14 @@ export function NewEntryDialog({
           <TextField label="Emissão (competência)" type="date" value={issueDate} onChange={(e) => setIssueDate(e.target.value)} />
           <TextField label="1º vencimento" type="date" value={firstDue} onChange={(e) => setFirstDue(e.target.value)} />
           <TextField label="Parcelas" inputMode="numeric" value={installments} onChange={(e) => setInstallments(e.target.value)} error={touched || n > 60 ? errors.installments : undefined} />
+          <SelectField label="Forma de pagamento combinada" value={method} onChange={(e) => setMethod(e.target.value as PaymentMethod | '')}>
+            <option value="">Não definida</option>
+            {(Object.keys(methodLabels) as PaymentMethod[]).map((m) => (
+              <option key={m} value={m}>
+                {methodLabels[m]}
+              </option>
+            ))}
+          </SelectField>
           <SelectField label="Intervalo" value={intervalDays} onChange={(e) => setIntervalDays(e.target.value)} disabled={n <= 1}>
             <option value="0">Mensal (mesmo dia)</option>
             <option value="7">A cada 7 dias</option>

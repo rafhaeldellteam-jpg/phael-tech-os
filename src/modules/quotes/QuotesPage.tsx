@@ -1,25 +1,35 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { FileSignature } from 'lucide-react'
 import { useState } from 'react'
-import { Link } from 'react-router'
+import { Link, useSearchParams } from 'react-router'
 import { Badge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { ErrorState } from '@/components/ui/ErrorState'
 import { PageHeader } from '@/components/ui/PageHeader'
+import { Tabs } from '@/components/ui/Tabs'
 import { Spinner } from '@/components/ui/Spinner'
-import { useActiveCompany } from '@/core/company/useCompany'
+import { useActiveCompany, useCompany } from '@/core/company/useCompany'
 import type { QuoteStatus } from '@/lib/database.types'
 import { formatCode, formatDate } from '@/lib/format'
 import { formatBRL } from '@/lib/money'
 import { requireSupabase } from '@/lib/supabase'
+import { DebtorsPanel } from '../finance/DebtorsPanel'
 import { formatIsoDate, isoDate } from '../finance/period'
 import { quoteKeys, quoteStatusLabels, quoteStatusTone } from './queries'
 
 /** Todos os orçamentos, com foco nos que aguardam o cliente. */
 export function QuotesPage() {
   const { company } = useActiveCompany()
+  const { can } = useCompany()
+  const [params, setParams] = useSearchParams()
+  const showDebtors = can(['finance.read'])
+  const tab = showDebtors && params.get('aba') === 'devendo' ? 'devendo' : 'orcamentos'
+  const tabs: { key: 'orcamentos' | 'devendo'; label: string }[] = [{ key: 'orcamentos', label: 'Orçamentos' }]
+  if (showDebtors) tabs.push({ key: 'devendo', label: 'Clientes devendo' })
+
   const [status, setStatus] = useState<'' | QuoteStatus>('sent')
   const list = useQuery({
+    enabled: tab === 'orcamentos',
     queryKey: quoteKeys.list(company.id, status),
     placeholderData: keepPreviousData,
     queryFn: async () => {
@@ -49,7 +59,14 @@ export function QuotesPage() {
 
   return (
     <div className="grid gap-5">
-      <PageHeader title="Orçamentos" description="Crie e envie orçamentos dentro de cada OS. Aqui você acompanha todos." />
+      <PageHeader title="Orçamentos" description="Crie e envie orçamentos dentro de cada OS. Aqui você acompanha todos e quem está devendo." />
+      {tabs.length > 1 && (
+        <Tabs label="Seções de orçamentos" items={tabs} value={tab} onChange={(k) => setParams(k === 'devendo' ? { aba: 'devendo' } : {}, { replace: true })} />
+      )}
+      {tab === 'devendo' ? (
+        <DebtorsPanel companyId={company.id} />
+      ) : (
+        <>
       <label className="grid max-w-xs gap-1 text-[13px] text-muted">
         Situação
         <select value={status} onChange={(e) => setStatus(e.target.value as typeof status)} className="h-9 rounded-md border border-line bg-[var(--surface)] px-2 text-sm text-[var(--text)]">
@@ -84,6 +101,8 @@ export function QuotesPage() {
             </li>
           ))}
         </ul>
+      )}
+        </>
       )}
     </div>
   )
