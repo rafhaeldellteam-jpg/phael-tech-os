@@ -20,23 +20,7 @@ import { requireSupabase } from '@/lib/supabase'
 import { groupByClient, planLabel, type Debt, type Installment } from './debtors'
 import { NewEntryDialog } from './EntryDialogs'
 import { formatIsoDate, isoDate } from './period'
-import { financeKeys, methodLabels, useAccounts } from './queries'
-
-const LAST_ACCOUNT = 'phael.finance.lastAccount'
-function readLastAccount(): string {
-  try {
-    return localStorage.getItem(LAST_ACCOUNT) ?? ''
-  } catch {
-    return ''
-  }
-}
-function saveLastAccount(id: string) {
-  try {
-    localStorage.setItem(LAST_ACCOUNT, id)
-  } catch {
-    /* sem armazenamento: só não lembra a conta */
-  }
-}
+import { financeKeys, methodLabels } from './queries'
 
 type PayTarget = { kind: 'one'; debt: Debt; inst: Installment } | { kind: 'all'; debt: Debt }
 
@@ -281,7 +265,7 @@ export function DebtorsPanel({ companyId }: { companyId: string }) {
       )}
 
       {creating && <NewEntryDialog companyId={companyId} direction="in" onClose={() => setCreating(false)} />}
-      {paying && <PayDialog companyId={companyId} target={paying} onClose={() => setPaying(null)} onDone={invalidate} />}
+      {paying && <PayDialog target={paying} onClose={() => setPaying(null)} onDone={invalidate} />}
       <ConfirmDialog
         open={unpaying !== null}
         onOpenChange={(o) => !o && setUnpaying(null)}
@@ -308,26 +292,21 @@ function Tile({ label, value, danger = false }: { label: string; value: string; 
   )
 }
 
-function PayDialog({ companyId, target, onClose, onDone }: { companyId: string; target: PayTarget; onClose: () => void; onDone: () => Promise<unknown> }) {
-  const accounts = useAccounts(companyId)
-  const active = (accounts.data ?? []).filter((a) => a.active)
+function PayDialog({ target, onClose, onDone }: { target: PayTarget; onClose: () => void; onDone: () => Promise<unknown> }) {
   const d = target.debt
   const [method, setMethod] = useState<PaymentMethod>(d.payment_method ?? 'pix')
   const [paidAt, setPaidAt] = useState(isoDate(new Date()))
-  const [account, setAccount] = useState(readLastAccount)
-  const accountId = active.some((a) => a.id === account) ? account : (active[0]?.id ?? '')
   const amount = target.kind === 'one' ? target.inst.amount_cents - target.inst.paid_cents : d.open_cents
 
   const pay = useMutation({
     mutationFn: async () => {
-      const data = { account_id: accountId, method, paid_at: paidAt } as Json
+      const data = { method, paid_at: paidAt } as Json
       const sb = requireSupabase()
       const { error } =
         target.kind === 'one'
           ? await sb.rpc('pay_installment', { p_entry_id: target.inst.id, p_data: data })
           : await sb.rpc('pay_entry_group', { p_group_id: d.group_id, p_data: data })
       if (error) throw error
-      saveLastAccount(accountId)
     },
     onSuccess: async () => {
       await onDone()
@@ -343,18 +322,15 @@ function PayDialog({ companyId, target, onClose, onDone }: { companyId: string; 
         : `"${d.description}"`
 
   return (
-    <FormDialog title={target.kind === 'all' ? 'Marcar tudo como pago' : 'Marcar como paga'} description={`Registra o pagamento de ${what}: ${formatBRL(amount)}.`} onClose={onClose}>
+    <FormDialog title={target.kind === 'all' ? 'Marcar tudo como pago' : 'Marcar como paga'} description={`Registra que ${what} foi pago: ${formatBRL(amount)}.`} onClose={onClose}>
       <form
         className="grid gap-4"
         onSubmit={(e) => {
           e.preventDefault()
-          if (accountId) pay.mutate()
+          if (paidAt) pay.mutate()
         }}
       >
         {pay.isError && <Alert tone="error">{toUserMessage(pay.error)}</Alert>}
-        {accounts.isSuccess && active.length === 0 && (
-          <Alert tone="warning">Cadastre uma conta (caixa ou banco) em Financeiro › Contas e categorias para registrar pagamentos.</Alert>
-        )}
         <div className="grid gap-4 sm:grid-cols-2">
           <SelectField label="Como foi pago" value={method} onChange={(e) => setMethod(e.target.value as PaymentMethod)}>
             {(Object.keys(methodLabels) as PaymentMethod[]).map((m) => (
@@ -364,19 +340,12 @@ function PayDialog({ companyId, target, onClose, onDone }: { companyId: string; 
             ))}
           </SelectField>
           <TextField label="Data do pagamento" type="date" value={paidAt} onChange={(e) => setPaidAt(e.target.value)} />
-          <SelectField label="Entrou na conta" value={accountId} onChange={(e) => setAccount(e.target.value)}>
-            {active.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.name}
-              </option>
-            ))}
-          </SelectField>
         </div>
         <div className="flex justify-end gap-2">
           <Button variant="secondary" onClick={onClose}>
             Cancelar
           </Button>
-          <Button type="submit" loading={pay.isPending} disabled={!accountId || !paidAt}>
+          <Button type="submit" loading={pay.isPending} disabled={!paidAt}>
             <CheckCircle2 className="size-4" aria-hidden /> Confirmar pagamento
           </Button>
         </div>

@@ -54,6 +54,8 @@
   e cada parcela com vencimento, valor e quando/como foi paga.
 - "Marcar como paga" (uma parcela) e "Marcar tudo como pago" (forma, data e conta); "Desmarcar" vira um
   estorno registrado. Nova cobrança com cliente, parcelas e forma de pagamento combinada.
+- Marcar como pago pede só a forma e a data: sem conta escolhida, o pagamento entra na conta "Caixa"
+  (criada sozinha se não existir). A escolha de conta só aparece quando há mais de uma.
 
 ### Próximos incrementos
 Ordem sugerida, cada item com migração + testes SQL + telas + testes:

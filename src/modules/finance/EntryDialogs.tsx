@@ -284,14 +284,12 @@ export function EntryDialog({ companyId, entry, canWrite, onClose }: { companyId
             className="grid gap-3 rounded-md border border-line p-3"
             onSubmit={(e) => {
               e.preventDefault()
-              if (cents && cents > 0 && cents <= remaining && account) pay.mutate()
+              if (cents && cents > 0 && cents <= remaining) pay.mutate()
             }}
           >
             <h3 className="text-sm font-semibold">Registrar {verb.toLowerCase()}</h3>
             {pay.isError && <Alert tone="error">{toUserMessage(pay.error)}</Alert>}
-            {activeAccounts.length === 0 ? (
-              <Alert tone="warning">Cadastre uma conta (caixa ou banco) na aba Configurações.</Alert>
-            ) : (
+            {
               <div className="grid gap-3 sm:grid-cols-2">
                 <TextField
                   label="Valor (R$)"
@@ -302,13 +300,15 @@ export function EntryDialog({ companyId, entry, canWrite, onClose }: { companyId
                   hint={`Em aberto: ${formatBRL(remaining)}. Valor menor registra pagamento parcial.`}
                 />
                 <TextField label="Data" type="date" value={paidAt} onChange={(e) => setPaidAt(e.target.value)} />
-                <SelectField label="Conta" value={account} onChange={(e) => setAccountId(e.target.value)}>
-                  {activeAccounts.map((a) => (
-                    <option key={a.id} value={a.id}>
-                      {a.name}
-                    </option>
-                  ))}
-                </SelectField>
+                {activeAccounts.length > 1 && (
+                  <SelectField label="Conta" value={account} onChange={(e) => setAccountId(e.target.value)}>
+                    {activeAccounts.map((a) => (
+                      <option key={a.id} value={a.id}>
+                        {a.name}
+                      </option>
+                    ))}
+                  </SelectField>
+                )}
                 <SelectField label="Forma" value={method} onChange={(e) => setMethod(e.target.value as PaymentMethod)}>
                   {(Object.keys(methodLabels) as PaymentMethod[]).map((m) => (
                     <option key={m} value={m}>
@@ -317,7 +317,7 @@ export function EntryDialog({ companyId, entry, canWrite, onClose }: { companyId
                   ))}
                 </SelectField>
               </div>
-            )}
+            }
             <div className="flex flex-wrap justify-between gap-2">
               {entry.paid_cents === 0 ? (
                 <Button variant="ghost" onClick={() => setMode('cancel')}>
@@ -326,7 +326,7 @@ export function EntryDialog({ companyId, entry, canWrite, onClose }: { companyId
               ) : (
                 <span />
               )}
-              <Button type="submit" loading={pay.isPending} disabled={!cents || cents <= 0 || cents > remaining || !account}>
+              <Button type="submit" loading={pay.isPending} disabled={!cents || cents <= 0 || cents > remaining}>
                 Registrar {verb.toLowerCase()}
               </Button>
             </div>
